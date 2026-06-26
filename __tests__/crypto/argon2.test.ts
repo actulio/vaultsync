@@ -27,9 +27,16 @@ describe('Argon2id KDF', () => {
   });
 
   test('NFKC normalizes Unicode passwords', async () => {
-    // U+00C5 (Å precomposed) vs U+0041 U+030A (A + combining ring) — same NFKC form
-    const a = await deriveMasterKey('Åpple', SALT);
-    const b = await deriveMasterKey('Åpple', SALT);
+    // Precomposed A-ring (U+00C5) vs decomposed A + combining ring above
+    // (U+0041 U+030A): different byte sequences that share one NFKC form.
+    // The derived keys match ONLY if deriveMasterKey NFKC-normalizes its
+    // input, so this test fails if the normalization step is removed.
+    const precomposed = 'Åpple';
+    const decomposed = 'Åpple';
+    expect(precomposed).not.toBe(decomposed); // genuinely distinct inputs
+    expect(precomposed.normalize('NFKC')).toBe(decomposed.normalize('NFKC'));
+    const a = await deriveMasterKey(precomposed, SALT);
+    const b = await deriveMasterKey(decomposed, SALT);
     expect(Array.from(a)).toEqual(Array.from(b));
   });
 });
