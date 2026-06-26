@@ -20,7 +20,11 @@ class VaultsyncNativeModule : Module() {
     }
 
     AsyncFunction("keystoreKeyExists") { promise: Promise ->
-      promise.resolve(keystore.keyExists())
+      try {
+        promise.resolve(keystore.keyExists())
+      } catch (e: Exception) {
+        promise.reject("E_KEYSTORE_EXISTS", e.message ?: "keystore check failed", e)
+      }
     }
 
     AsyncFunction("deleteKeystoreKey") { promise: Promise ->
@@ -73,7 +77,11 @@ class VaultsyncNativeModule : Module() {
     }
 
     AsyncFunction("vaultExists") { name: String, promise: Promise ->
-      promise.resolve(vaultIO.exists(name))
+      try {
+        promise.resolve(vaultIO.exists(name))
+      } catch (e: Exception) {
+        promise.reject("E_VAULT_EXISTS", e.message ?: "exists check failed", e)
+      }
     }
 
     AsyncFunction("vaultDelete") { name: String, promise: Promise ->
