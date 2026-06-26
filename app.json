@@ -4,12 +4,14 @@
     "slug": "vaultsync",
     "version": "1.0.0",
     "orientation": "portrait",
+    "plugins": [],
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.vaultsync.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
