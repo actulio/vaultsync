@@ -2,6 +2,7 @@
   "name": "vaultsync",
   "version": "1.0.0",
   "main": "index.ts",
+  "packageManager": "pnpm@11.1.1",
   "dependencies": {
     "expo": "~56.0.12",
     "expo-localization": "^56.0.6",
