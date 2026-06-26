@@ -52,5 +52,37 @@ class VaultsyncNativeModule : Module() {
         promise.reject("E_KEYSTORE_UNWRAP", e.message ?: "unwrap failed", e)
       }
     }
+
+    val vaultIO = VaultIO(appContext.reactContext!!)
+
+    AsyncFunction("vaultRead") { name: String, promise: Promise ->
+      try {
+        promise.resolve(vaultIO.read(name))
+      } catch (e: Exception) {
+        promise.reject("E_VAULT_READ", e.message ?: "read failed", e)
+      }
+    }
+
+    AsyncFunction("vaultWrite") { name: String, bytes: ByteArray, promise: Promise ->
+      try {
+        vaultIO.writeAtomic(name, bytes)
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("E_VAULT_WRITE", e.message ?: "write failed", e)
+      }
+    }
+
+    AsyncFunction("vaultExists") { name: String, promise: Promise ->
+      promise.resolve(vaultIO.exists(name))
+    }
+
+    AsyncFunction("vaultDelete") { name: String, promise: Promise ->
+      try {
+        vaultIO.delete(name)
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("E_VAULT_DELETE", e.message ?: "delete failed", e)
+      }
+    }
   }
 }
