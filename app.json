@@ -4,7 +4,9 @@
     "slug": "vaultsync",
     "version": "1.0.0",
     "orientation": "portrait",
-    "plugins": [],
+    "scheme": "vaultsync",
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": true },
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {

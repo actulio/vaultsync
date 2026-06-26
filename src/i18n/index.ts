@@ -43,11 +43,11 @@ export async function initI18n(initialLanguage: SupportedLanguage = DEFAULT_LANG
 export function t(key: string, options?: Record<string, unknown>): string {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
   const result = i18next.t(key, options as any) as string;
-  // i18next strips the namespace prefix from missing keys (returns bare key).
-  // Restore the full namespaced path so callers can detect missing translations.
-  if (key.includes(':')) {
-    const bareKey = key.split(':').slice(1).join(':');
-    if (result === bareKey) return key;
+  // Use i18next.exists() to detect missing keys — more robust than comparing the
+  // translated result to the bare key (which would false-positive when a translation
+  // value happens to equal its bare key path).
+  if (key.includes(':') && !i18next.exists(key)) {
+    return key;
   }
   return result;
 }

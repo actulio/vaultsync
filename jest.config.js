@@ -1,10 +1,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
+  preset: 'jest-expo',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  testMatch: ['<rootDir>/__tests__/**/*.test.{ts,tsx}'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
-  setupFiles: [],
-  collectCoverageFrom: ['src/**/*.ts'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(.pnpm|expo|expo-modules-core|@expo|expo-router|react-native|@react-native|libsodium-wrappers-sumo))',
+  ],
   testTimeout: 30_000,
 };
