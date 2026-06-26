@@ -1,3 +1,8 @@
+import type { Argon2Params } from '@/crypto/argon2';
+
+// Re-export so existing `import { Argon2Params } from '@/vault/format'` callers still resolve (fold-in 2b).
+export type { Argon2Params };
+
 const MAGIC = new Uint8Array([0x56, 0x4c, 0x54, 0x31]); // "VLT1"
 const SUPPORTED_VERSION = 1;
 const SALT_LEN = 16;
@@ -5,13 +10,6 @@ const PARAMS_LEN = 10; // memoryKiB (u32: 4) + timeCost (u16: 2) + parallelism (
 const NONCE_LEN = 12;
 const TAG_LEN = 16;
 const WRAPPED_KEY_LEN = NONCE_LEN + 32 + TAG_LEN; // 60
-
-export type Argon2Params = {
-  memoryKiB: number; // u32 (supports values up to 4GB)
-  timeCost: number; // u16
-  parallelism: number; // u16
-  hashLen: number; // u16
-};
 
 export type VaultFileFields = {
   version: 1;
@@ -24,10 +22,17 @@ export type VaultFileFields = {
   vaultTag: Uint8Array;
 };
 
-export function encodeVaultFile(f: VaultFileFields): Uint8Array {
+/** Header fields: everything in VaultFileFields except vaultCiphertext/vaultTag. */
+export type VaultHeaderFields = Omit<VaultFileFields, 'vaultCiphertext' | 'vaultTag'>;
+
+/**
+ * Serializes the vault header — all fields that precede the ciphertext/tag in the binary format.
+ * Used as AEAD associated-data so the header is authenticated together with the vault payload.
+ * encodeVaultFile delegates to this internally, so the byte layout is a single source of truth.
+ */
+export function serializeVaultHeader(f: VaultHeaderFields): Uint8Array {
   if (f.salt.length !== SALT_LEN) throw new Error('salt must be 16 bytes');
   if (f.vaultNonce.length !== NONCE_LEN) throw new Error('vault nonce must be 12 bytes');
-  if (f.vaultTag.length !== TAG_LEN) throw new Error('vault tag must be 16 bytes');
   if (f.recoveryWrappedKey && f.recoveryWrappedKey.length !== WRAPPED_KEY_LEN) {
     throw new Error(`recovery wrapped key must be ${WRAPPED_KEY_LEN} bytes`);
   }
@@ -35,12 +40,11 @@ export function encodeVaultFile(f: VaultFileFields): Uint8Array {
   const hintBytes = new TextEncoder().encode(f.hint);
   if (hintBytes.length > 255) throw new Error('hint exceeds 255 bytes');
 
-  const fixed =
-    MAGIC.length + 1 + SALT_LEN + PARAMS_LEN + 1 + 1 + NONCE_LEN + TAG_LEN; // see layout
   const recoveryLen = f.recoveryWrappedKey ? WRAPPED_KEY_LEN : 0;
-  const totalLen = fixed + hintBytes.length + recoveryLen + f.vaultCiphertext.length;
+  const headerLen =
+    MAGIC.length + 1 + SALT_LEN + PARAMS_LEN + 1 + hintBytes.length + 1 + recoveryLen + NONCE_LEN;
 
-  const out = new Uint8Array(totalLen);
+  const out = new Uint8Array(headerLen);
   const view = new DataView(out.buffer);
   let o = 0;
 
@@ -55,10 +59,19 @@ export function encodeVaultFile(f: VaultFileFields): Uint8Array {
   out.set(hintBytes, o); o += hintBytes.length;
   out[o++] = f.recoveryWrappedKey ? 1 : 0;
   if (f.recoveryWrappedKey) { out.set(f.recoveryWrappedKey, o); o += WRAPPED_KEY_LEN; }
-  out.set(f.vaultNonce, o); o += NONCE_LEN;
+  out.set(f.vaultNonce, o);
+
+  return out;
+}
+
+export function encodeVaultFile(f: VaultFileFields): Uint8Array {
+  if (f.vaultTag.length !== TAG_LEN) throw new Error('vault tag must be 16 bytes');
+  const header = serializeVaultHeader(f); // validates salt, nonce, recovery key, hint
+  const out = new Uint8Array(header.length + f.vaultCiphertext.length + f.vaultTag.length);
+  let o = 0;
+  out.set(header, o); o += header.length;
   out.set(f.vaultCiphertext, o); o += f.vaultCiphertext.length;
   out.set(f.vaultTag, o);
-
   return out;
 }
 
