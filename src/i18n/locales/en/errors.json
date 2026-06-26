@@ -1,0 +1,9 @@
+{
+  "wrong_password": "Wrong master password",
+  "wrong_recovery_code": "Invalid recovery code",
+  "vault_corrupt": "Vault corrupted — file could not be decrypted",
+  "keystore_unavailable": "Device secure keystore unavailable",
+  "biometric_failed": "Biometric authentication failed",
+  "drive_offline": "Google Drive offline",
+  "unknown": "Unknown error"
+}

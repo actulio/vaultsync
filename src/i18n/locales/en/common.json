@@ -1,0 +1,12 @@
+{
+  "app": { "name": "VaultSync" },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "copy": "Copy"
+  }
+}

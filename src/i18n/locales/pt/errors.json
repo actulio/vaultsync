@@ -1,0 +1,9 @@
+{
+  "wrong_password": "Senha mestre incorreta",
+  "wrong_recovery_code": "Código de recuperação inválido",
+  "vault_corrupt": "VaultSync corrompido — o arquivo não pôde ser decifrado",
+  "keystore_unavailable": "VaultSync seguro do sistema indisponível neste dispositivo",
+  "biometric_failed": "Falha na autenticação biométrica",
+  "drive_offline": "Sem conexão com o Google Drive",
+  "unknown": "Erro desconhecido"
+}
