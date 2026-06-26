@@ -17,6 +17,7 @@ using superpowers:subagent-driven-development. The project already exists at
 FIRST, read these to orient before dispatching any task:
 - /Users/work/personal/random/vaultsync/.superpowers/sdd/progress.md  (Plan 1 ledger: decisions + carried-forward items)
 - /Users/work/personal/random/vaultsync/NEXT.md  (this file's binding context)
+- /Users/work/personal/random/vaultsync/DESIGN.md  (the visual design system — every screen must follow it)
 - the spec: /Users/work/personal/random/docs/superpowers/specs/2026-06-25-password-manager-design.md
 
 Binding context from Plan 1 (do NOT contradict or re-derive):
@@ -32,6 +33,10 @@ Binding context from Plan 1 (do NOT contradict or re-derive):
 - i18n is bootstrapped (src/i18n, PT default + EN). Add new UI namespaces via the `addNamespace(lang, ns, resources)`
   helper — do not edit the central init for each screen.
 - It's a custom Expo dev client (NOT Expo Go) because of native code. App entry is still the blank template (no UI yet).
+- UI: follow DESIGN.md — in the first UI task, materialize its tokens in src/theme/ (tokens.ts + ThemeProvider/
+  useTheme, light+dark via useColorScheme); components consume the theme, never inline hex/sizes. Use the
+  vercel-react-native-skills skill for React Native implementation (NOT the web-oriented frontend-design skill).
+  All copy via i18n addNamespace; test screens with the longer Portuguese strings.
 
 Android toolchain is already installed (JDK 17, SDK 34/35/36, NDK 27.1.12297006, cmake, AVD `vaultsync_test`).
 For any gradle/emulator work, export:
