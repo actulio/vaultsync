@@ -2,6 +2,7 @@ package expo.modules.vaultsyncnative
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
@@ -32,7 +33,8 @@ class KeystoreTest {
     keystore.generateKeyIfMissing()
     val wrapped = keystore.wrap(ByteArray(32))
     // layout = nonce(12) + ciphertext(32) + tag(16)
-    assert(wrapped.size == 12 + 32 + 16)
+    // JUnit assertEquals (not Kotlin `assert`, which is a no-op on Android/ART).
+    assertEquals(12 + 32 + 16, wrapped.size)
   }
 
   @Test
