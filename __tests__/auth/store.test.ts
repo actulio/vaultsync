@@ -35,11 +35,13 @@ describe('auth store', () => {
   });
 
   test('lock wipes masterKey and vault', () => {
-    useAuthStore.getState().unlock(new Uint8Array(32).fill(1), emptyVault());
+    const key = new Uint8Array(32).fill(1);
+    useAuthStore.getState().unlock(key, emptyVault());
     useAuthStore.getState().lock();
     expect(useAuthStore.getState().status).toBe('locked');
     expect(useAuthStore.getState().masterKey).toBeNull();
     expect(useAuthStore.getState().vault).toBeNull();
+    expect(key.every((b) => b === 0)).toBe(true); // fill(0) wipe verified
   });
 
   test('updateVault refuses when locked', () => {
