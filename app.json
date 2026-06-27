@@ -5,8 +5,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "vaultsync",
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
