@@ -1,2 +1,8 @@
 <manifest>
+  <application>
+    <activity
+      android:name=".BiometricPromptActivity"
+      android:exported="false"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+  </application>
 </manifest>

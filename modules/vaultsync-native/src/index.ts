@@ -10,6 +10,7 @@ type VaultsyncNativeModule = {
   vaultWrite(name: string, bytes: Uint8Array): Promise<void>;
   vaultExists(name: string): Promise<boolean>;
   vaultDelete(name: string): Promise<void>;
+  promptBiometric(title: string, subtitle: string): Promise<'success' | 'failed' | 'canceled' | 'unavailable'>;
 };
 
 const VaultsyncNative = requireNativeModule<VaultsyncNativeModule>('VaultsyncNative');

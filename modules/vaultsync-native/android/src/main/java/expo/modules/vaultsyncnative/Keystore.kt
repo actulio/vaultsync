@@ -1,5 +1,6 @@
 package expo.modules.vaultsyncnative
 
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.security.KeyStore
@@ -35,7 +36,10 @@ class Keystore(
       builder
         .setUserAuthenticationRequired(true)
         .setInvalidatedByBiometricEnrollment(true)
-      // SetUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG) for per-op auth — defaults are fine.
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        // Per-operation auth: timeout=0 means each key use requires a fresh BIOMETRIC_STRONG auth.
+        builder.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
+      }
     }
     gen.init(builder.build())
     gen.generateKey()

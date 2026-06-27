@@ -1,5 +1,6 @@
 package expo.modules.vaultsyncnative
 
+import android.content.Intent
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.Promise
@@ -92,5 +93,19 @@ class VaultsyncNativeModule : Module() {
         promise.reject("E_VAULT_DELETE", e.message ?: "delete failed", e)
       }
     }
+
+    val biometric = BiometricModule(this@VaultsyncNativeModule)
+
+    AsyncFunction("promptBiometric") { title: String, subtitle: String, promise: Promise ->
+      biometric.prompt(title, subtitle, promise)
+    }
+
+    OnActivityResult { _, payload ->
+      biometric.onActivityResult(payload.requestCode, payload.resultCode, payload.data)
+    }
+  }
+
+  fun startActivityForResult(intent: Intent, requestCode: Int) {
+    appContext.currentActivity?.startActivityForResult(intent, requestCode)
   }
 }
