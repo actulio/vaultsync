@@ -52,9 +52,12 @@ export async function signInWithGoogle(): Promise<boolean> {
     discovery,
   );
 
-  if (token.refreshToken) {
-    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token.refreshToken);
+  // Require a refresh token for successful sign-in (offline access).
+  if (!token.refreshToken) {
+    return false;
   }
+
+  await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token.refreshToken);
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, token.accessToken);
   await SecureStore.setItemAsync(
     ACCESS_TOKEN_EXP_KEY,
