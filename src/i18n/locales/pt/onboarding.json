@@ -1,0 +1,38 @@
+{
+  "welcome": {
+    "title": "Bem-vindo ao VaultSync",
+    "subtitle": "Seu gerenciador de senhas pessoal. Vamos começar criando seu vaultsync.",
+    "cta": "Criar vaultsync"
+  },
+  "setPassword": {
+    "title": "Crie sua senha mestre",
+    "body": "Esta senha desbloqueia o seu vaultsync. Não há recuperação automática — guarde-a com cuidado.",
+    "passwordLabel": "Senha mestre",
+    "confirmLabel": "Confirme a senha",
+    "hintLabel": "Dica (opcional)",
+    "hintWarning": "A dica é armazenada em texto puro. Não escreva a senha aqui.",
+    "errorTooShort": "A senha deve ter no mínimo 8 caracteres",
+    "errorMismatch": "As senhas não coincidem",
+    "cta": "Continuar"
+  },
+  "recoveryCode": {
+    "title": "Código de recuperação",
+    "body": "Anote este código em papel ou em um local físico seguro. Se você esquecer sua senha mestre, este é o único modo de recuperar o vaultsync.",
+    "warning": "Não tire um screenshot. Não salve em um arquivo no celular.",
+    "copy": "Copiar",
+    "savedCheckbox": "Confirmo que salvei este código com segurança",
+    "cta": "Continuar"
+  },
+  "biometric": {
+    "title": "Ativar biometria",
+    "body": "Use sua digital ou rosto para desbloquear o vaultsync rapidamente. Sua senha mestre continua necessária após reinicialização.",
+    "ctaEnable": "Ativar",
+    "ctaSkip": "Pular por enquanto"
+  },
+  "driveSignin": {
+    "title": "Conectar Google Drive",
+    "body": "O VaultSync sincroniza um arquivo criptografado na sua conta Google. Apenas este arquivo é visível para o app.",
+    "ctaConnect": "Conectar Drive",
+    "ctaSkip": "Conectar depois"
+  }
+}

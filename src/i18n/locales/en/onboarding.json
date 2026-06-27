@@ -1,0 +1,38 @@
+{
+  "welcome": {
+    "title": "Welcome to VaultSync",
+    "subtitle": "Your personal password manager. Let's start by creating your vault.",
+    "cta": "Create vault"
+  },
+  "setPassword": {
+    "title": "Create your master password",
+    "body": "This password unlocks your vault. There is no automatic recovery — keep it safe.",
+    "passwordLabel": "Master password",
+    "confirmLabel": "Confirm password",
+    "hintLabel": "Hint (optional)",
+    "hintWarning": "The hint is stored in plain text. Don't write the password here.",
+    "errorTooShort": "Password must be at least 8 characters",
+    "errorMismatch": "Passwords do not match",
+    "cta": "Continue"
+  },
+  "recoveryCode": {
+    "title": "Recovery code",
+    "body": "Write this down on paper or in a physically safe place. If you forget your master password, this is the only way to recover your vault.",
+    "warning": "Don't screenshot. Don't save in a file on this phone.",
+    "copy": "Copy",
+    "savedCheckbox": "I confirm I have saved this code safely",
+    "cta": "Continue"
+  },
+  "biometric": {
+    "title": "Enable biometric",
+    "body": "Use your fingerprint or face to unlock quickly. Master password is still required after reboot.",
+    "ctaEnable": "Enable",
+    "ctaSkip": "Skip for now"
+  },
+  "driveSignin": {
+    "title": "Connect Google Drive",
+    "body": "VaultSync syncs one encrypted file to your Google account. Only this file is visible to the app.",
+    "ctaConnect": "Connect Drive",
+    "ctaSkip": "Connect later"
+  }
+}
