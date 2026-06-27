@@ -44,7 +44,7 @@ class BiometricPromptActivity : FragmentActivity() {
       .setTitle(title)
       .setSubtitle(subtitle)
       .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-      .setNegativeButtonText("Cancel")
+      .setNegativeButtonText(getString(android.R.string.cancel))
       .build()
     prompt.authenticate(promptInfo)
   }

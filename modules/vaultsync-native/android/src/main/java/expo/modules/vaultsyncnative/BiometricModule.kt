@@ -8,17 +8,24 @@ class BiometricModule(private val moduleHolder: VaultsyncNativeModule) {
   private var pendingPromise: Promise? = null
 
   fun prompt(title: String, subtitle: String, promise: Promise) {
-    moduleHolder.appContext.currentActivity
+    // Capture the activity reference ONCE — re-fetching it (or using !!) after
+    // setting pendingPromise risks an NPE that would leave the promise dangling
+    // and wedge every later prompt on E_BIOMETRIC_BUSY.
+    val activity = moduleHolder.appContext.currentActivity
       ?: return promise.reject("E_NO_ACTIVITY", "No current activity", null)
     if (pendingPromise != null) {
       return promise.reject("E_BIOMETRIC_BUSY", "Another biometric prompt is in flight", null)
     }
     pendingPromise = promise
-    val activity = moduleHolder.appContext.currentActivity!!
     val intent = Intent(activity, BiometricPromptActivity::class.java)
       .putExtra(BiometricPromptActivity.EXTRA_TITLE, title)
       .putExtra(BiometricPromptActivity.EXTRA_SUBTITLE, subtitle)
-    moduleHolder.startActivityForResult(intent, REQUEST_CODE_BIOMETRIC)
+    try {
+      activity.startActivityForResult(intent, REQUEST_CODE_BIOMETRIC)
+    } catch (e: Exception) {
+      pendingPromise = null
+      promise.reject("E_BIOMETRIC_LAUNCH", e.message ?: "failed to launch biometric prompt", e)
+    }
   }
 
   fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {

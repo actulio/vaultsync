@@ -104,8 +104,4 @@ class VaultsyncNativeModule : Module() {
       biometric.onActivityResult(payload.requestCode, payload.resultCode, payload.data)
     }
   }
-
-  fun startActivityForResult(intent: Intent, requestCode: Int) {
-    appContext.currentActivity?.startActivityForResult(intent, requestCode)
-  }
 }
