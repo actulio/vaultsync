@@ -44,7 +44,7 @@ export async function recoverAndReset(
 
   // Step 5: Rotate — new salt, new master key, new recovery code + key
   const newSalt        = await randomBytes(16);
-  const newMasterKey   = await deriveMasterKey(newPassword, newSalt);
+  const newMasterKey   = await deriveMasterKey(newPassword, newSalt, DEFAULT_ARGON2);
   const newRecoveryCode = await generateRecoveryCode();
   const newRecoveryKey = await deriveRecoveryKey(newRecoveryCode, newSalt);
 

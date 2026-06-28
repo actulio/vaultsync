@@ -22,6 +22,7 @@ function onChange(state: AppStateStatus): void {
 }
 
 export function startAutoLock(timeoutMs: number = DEFAULT_AUTO_LOCK_MS): () => void {
+  subscription?.remove(); // guard against a leaked listener on double-registration
   configuredTimeoutMs = timeoutMs;
   subscription = AppState.addEventListener('change', onChange);
   return stopAutoLock;

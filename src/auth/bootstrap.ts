@@ -1,5 +1,5 @@
-import { useAuthStore } from './store';
-import { vaultExists } from './unlock';
+import { useAuthStore } from '@/auth/store';
+import { vaultExists } from '@/auth/unlock';
 
 export async function bootstrapAuth(): Promise<void> {
   const exists = await vaultExists();
