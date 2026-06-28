@@ -11,6 +11,8 @@ type VaultsyncNativeModule = {
   vaultExists(name: string): Promise<boolean>;
   vaultDelete(name: string): Promise<void>;
   promptBiometric(title: string, subtitle: string): Promise<'success' | 'failed' | 'canceled' | 'unavailable'>;
+  scheduleClipboardClear(expected: string, delaySeconds: number): Promise<void>;
+  cancelClipboardClear(): Promise<void>;
 };
 
 const VaultsyncNative = requireNativeModule<VaultsyncNativeModule>('VaultsyncNative');

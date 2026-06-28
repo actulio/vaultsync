@@ -100,6 +100,18 @@ class VaultsyncNativeModule : Module() {
       biometric.prompt(title, subtitle, promise)
     }
 
+    val clipboard = ClipboardModule(appContext.reactContext!!)
+
+    AsyncFunction("scheduleClipboardClear") { expected: String, delaySeconds: Double, promise: Promise ->
+      clipboard.scheduleClear(expected, delaySeconds.toLong())
+      promise.resolve(null)
+    }
+
+    AsyncFunction("cancelClipboardClear") { promise: Promise ->
+      clipboard.cancelPending()
+      promise.resolve(null)
+    }
+
     OnActivityResult { _, payload ->
       biometric.onActivityResult(payload.requestCode, payload.resultCode, payload.data)
     }
