@@ -13,7 +13,7 @@ describe('RecoveryCode', () => {
   it('disables continue until checkbox is confirmed', async () => {
     const { getByRole } = await render(<RecoveryCode />);
     expect(getByRole('button', { name: 'Continuar' }).props.accessibilityState?.disabled).toBeTruthy();
-    fireEvent.press(getByRole('checkbox'));
+    void fireEvent.press(getByRole('checkbox'));
     await waitFor(() => {
       expect(getByRole('button', { name: 'Continuar' }).props.accessibilityState?.disabled).toBeFalsy();
     });

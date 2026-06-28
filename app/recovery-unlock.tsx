@@ -123,7 +123,7 @@ export default function RecoveryUnlock(): JSX.Element {
         accessibilityRole="button"
         accessibilityLabel={t('recoveryUnlock.cta')}
         disabled={submitting}
-        onPress={submit}
+        onPress={() => { void submit(); }}
         style={({ pressed }) => [
           styles.cta,
           submitting && styles.ctaDisabled,

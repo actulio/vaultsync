@@ -111,7 +111,7 @@ export default function Unlock(): JSX.Element {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('unlock.biometricCta')}
-        onPress={onBiometric}
+        onPress={() => { void onBiometric(); }}
         style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
       >
         <Text style={styles.ctaLabel}>{t('unlock.biometricCta')}</Text>
@@ -136,7 +136,7 @@ export default function Unlock(): JSX.Element {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('unlock.passwordCta')}
-        onPress={onPasswordSubmit}
+        onPress={() => { void onPasswordSubmit(); }}
         style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
       >
         <Text style={styles.ctaLabel}>{t('unlock.passwordCta')}</Text>

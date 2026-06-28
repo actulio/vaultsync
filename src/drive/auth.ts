@@ -20,7 +20,7 @@ const discovery = {
  * Throws if EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID is not set.
  */
 export async function signInWithGoogle(): Promise<boolean> {
-  const clientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID as string | undefined;
   if (!clientId) {
     throw new Error(
       'EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID is not set. ' +
@@ -45,7 +45,7 @@ export async function signInWithGoogle(): Promise<boolean> {
   const token = await AuthSession.exchangeCodeAsync(
     {
       clientId,
-      code: result.params['code']!,
+      code: result.params['code'],
       redirectUri,
       extraParams: { code_verifier: request.codeVerifier! },
     },

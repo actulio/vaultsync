@@ -103,8 +103,7 @@ describe('createVault', () => {
   });
 
   it('createVault writes vault.enc and masterKey.wrapped to VaultStore', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mocked = jest.requireMock('@/native/keystore') as any;
+    const mocked = jest.requireMock('@/native/keystore');
     const VaultStore = mocked.VaultStore as { write: jest.Mock };
     const Keystore = mocked.Keystore as {
       generateKeyIfMissing: jest.Mock;

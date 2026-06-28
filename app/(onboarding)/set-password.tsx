@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -139,7 +138,7 @@ export default function SetPassword(): JSX.Element {
         accessibilityRole="button"
         accessibilityLabel={t('setPassword.cta')}
         disabled={submitting}
-        onPress={onSubmit}
+        onPress={() => { void onSubmit(); }}
         style={({ pressed }) => [
           styles.cta,
           submitting && styles.ctaDisabled,

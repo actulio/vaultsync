@@ -54,7 +54,7 @@ export default function DriveSignin(): JSX.Element {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('driveSignin.ctaConnect')}
-        onPress={connect}
+        onPress={() => { void connect(); }}
         style={({ pressed }) => [styles.ctaConnect, { opacity: pressed ? 0.85 : 1 }]}
       >
         <Text style={styles.ctaConnectLabel}>{t('driveSignin.ctaConnect')}</Text>

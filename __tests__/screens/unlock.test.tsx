@@ -54,10 +54,10 @@ import Unlock from '../../app/unlock';
 describe('Unlock screen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const mod = jest.requireMock('@/auth/unlock') as {
+    const mod = jest.requireMock<{
       readVaultHint: jest.Mock;
       unlockWithPassword: jest.Mock;
-    };
+    }>('@/auth/unlock');
     mod.readVaultHint.mockResolvedValue('');
     mod.unlockWithPassword.mockResolvedValue({
       masterKey: new Uint8Array(32),
@@ -78,10 +78,10 @@ describe('Unlock screen', () => {
     const { findByLabelText, findByText } = await render(<Unlock />);
 
     const input = await findByLabelText('Senha mestre', { exact: false });
-    fireEvent.changeText(input, 'badpassword');
+    void fireEvent.changeText(input, 'badpassword');
 
     const submitBtn = await findByText('Desbloquear');
-    fireEvent.press(submitBtn);
+    void fireEvent.press(submitBtn);
 
     expect(await findByText('Senha incorreta')).toBeTruthy();
   });
@@ -105,7 +105,7 @@ describe('Unlock screen', () => {
 
     const { findByText } = await render(<Unlock />);
     const biometricBtn = await findByText('Usar biometria');
-    fireEvent.press(biometricBtn);
+    void fireEvent.press(biometricBtn);
 
     await waitFor(() => expect(alertSpy).toHaveBeenCalled());
   });

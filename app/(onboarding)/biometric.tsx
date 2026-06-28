@@ -1,4 +1,4 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
@@ -65,7 +65,7 @@ export default function BiometricEnroll(): JSX.Element {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('biometric.ctaEnable')}
-          onPress={enable}
+          onPress={() => { void enable(); }}
           style={({ pressed }) => [styles.ctaEnable, { opacity: pressed ? 0.85 : 1 }]}
         >
           <Text style={styles.ctaEnableLabel}>{t('biometric.ctaEnable')}</Text>

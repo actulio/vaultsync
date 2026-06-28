@@ -123,7 +123,7 @@ describe('signInWithGoogle — token exchange', () => {
   });
 
   it('returns false and does not persist refresh token when exchangeCodeAsync returns no refreshToken', async () => {
-    const AuthSession = require('expo-auth-session');
+    const AuthSession = jest.requireMock('expo-auth-session');
 
     // Mock AuthRequest to simulate successful OAuth code flow
     AuthSession.AuthRequest.mockImplementationOnce(() => ({
@@ -155,7 +155,7 @@ describe('signInWithGoogle — token exchange', () => {
   });
 
   it('returns true and persists refresh token when exchangeCodeAsync returns a refreshToken', async () => {
-    const AuthSession = require('expo-auth-session');
+    const AuthSession = jest.requireMock('expo-auth-session');
 
     // Mock AuthRequest to simulate successful OAuth code flow
     AuthSession.AuthRequest.mockImplementationOnce(() => ({
@@ -188,7 +188,7 @@ describe('signInWithGoogle — token exchange', () => {
   });
 
   it('returns false when user cancels OAuth prompt', async () => {
-    const AuthSession = require('expo-auth-session');
+    const AuthSession = jest.requireMock('expo-auth-session');
 
     // Mock AuthRequest to simulate user cancellation
     AuthSession.AuthRequest.mockImplementationOnce(() => ({
