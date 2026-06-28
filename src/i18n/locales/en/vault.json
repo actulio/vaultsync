@@ -1,0 +1,35 @@
+{
+  "tabs": { "vault": "Vault", "generator": "Generator", "settings": "Settings" },
+  "list": {
+    "searchPlaceholder": "Search...",
+    "filterAll": "All",
+    "filterLogin": "Logins",
+    "filterNote": "Notes",
+    "empty": "Vault is empty. Tap + to add.",
+    "fab": "Add"
+  },
+  "detail": {
+    "username": "Username",
+    "password": "Password",
+    "url": "URL",
+    "notes": "Notes",
+    "copy": "Copy",
+    "copied": "Copied! Will clear in 30s",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Delete this entry?",
+    "body": "Body"
+  },
+  "edit": {
+    "titleLogin": "Login",
+    "titleNote": "Secure note",
+    "newLogin": "New login",
+    "newNote": "New note",
+    "save": "Save",
+    "generate": "Generate",
+    "fields": {
+      "title": "Title", "username": "Username", "password": "Password",
+      "url": "URL", "notes": "Notes", "body": "Body"
+    }
+  }
+}

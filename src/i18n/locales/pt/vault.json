@@ -1,0 +1,35 @@
+{
+  "tabs": { "vault": "VaultSync", "generator": "Gerador", "settings": "Ajustes" },
+  "list": {
+    "searchPlaceholder": "Buscar...",
+    "filterAll": "Todos",
+    "filterLogin": "Logins",
+    "filterNote": "Notas",
+    "empty": "VaultSync vazio. Toque em + para adicionar.",
+    "fab": "Adicionar"
+  },
+  "detail": {
+    "username": "Usuário",
+    "password": "Senha",
+    "url": "URL",
+    "notes": "Notas",
+    "copy": "Copiar",
+    "copied": "Copiado! Será limpo em 30s",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "confirmDelete": "Excluir esta entrada?",
+    "body": "Conteúdo"
+  },
+  "edit": {
+    "titleLogin": "Login",
+    "titleNote": "Nota segura",
+    "newLogin": "Nova senha",
+    "newNote": "Nova nota",
+    "save": "Salvar",
+    "generate": "Gerar",
+    "fields": {
+      "title": "Título", "username": "Usuário", "password": "Senha",
+      "url": "URL", "notes": "Notas", "body": "Conteúdo"
+    }
+  }
+}
