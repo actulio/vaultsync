@@ -37,9 +37,13 @@ export default function Unlock(): JSX.Element {
   const onBiometric = async (): Promise<void> => {
     const r = await Biometric.prompt(t('unlock.title'), '');
     if (r !== 'success') return;
-    const { masterKey, vault } = await unlockWithBiometric();
-    useAuthStore.getState().unlock(masterKey, vault);
-    router.replace('/(app)');
+    try {
+      const { masterKey, vault } = await unlockWithBiometric();
+      useAuthStore.getState().unlock(masterKey, vault);
+      router.replace('/(app)');
+    } catch (e) {
+      Alert.alert('Error', (e as Error).message);
+    }
   };
 
   const onPasswordSubmit = async (): Promise<void> => {

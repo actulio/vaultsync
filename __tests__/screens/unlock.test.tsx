@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { Alert } from 'react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 // -----------------------------------------------------------------------
 // Mocks — factories must be self-contained (no out-of-scope references)
@@ -43,7 +44,8 @@ jest.mock('@/auth/store', () => ({
 // -----------------------------------------------------------------------
 // Imports (after mocks so they receive the mocked modules)
 // -----------------------------------------------------------------------
-import { unlockWithPassword, RecoverableError } from '@/auth/unlock';
+import { unlockWithPassword, unlockWithBiometric, RecoverableError } from '@/auth/unlock';
+import { Biometric } from '@/native/biometric';
 import Unlock from '../../app/unlock';
 
 // -----------------------------------------------------------------------
@@ -92,5 +94,19 @@ describe('Unlock screen', () => {
   it('renders forgot password link', async () => {
     const { findByText } = await render(<Unlock />);
     expect(await findByText('Esqueci minha senha mestre')).toBeTruthy();
+  });
+
+  it('shows Alert when unlockWithBiometric throws after a successful prompt', async () => {
+    (Biometric.prompt as jest.Mock).mockResolvedValueOnce('success');
+    (unlockWithBiometric as jest.Mock).mockRejectedValueOnce(
+      new RecoverableError('vault_corrupt'),
+    );
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+
+    const { findByText } = await render(<Unlock />);
+    const biometricBtn = await findByText('Usar biometria');
+    fireEvent.press(biometricBtn);
+
+    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
   });
 });
