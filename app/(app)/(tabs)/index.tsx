@@ -11,7 +11,7 @@ const FILTERS: readonly EntryTypeFilter[] = ['all', 'login', 'note'] as const;
 
 export default function VaultList(): JSX.Element {
   const { t } = useTranslation('vault');
-  const { colors, spacing, radii, type } = useTheme();
+  const { colors, spacing, radii, sizes, type } = useTheme();
   const vault = useAuthStore((s) => s.vault);
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<EntryTypeFilter>('all');
@@ -94,8 +94,8 @@ export default function VaultList(): JSX.Element {
       position: 'absolute',
       bottom: spacing['2xl'],
       right: spacing['2xl'],
-      width: 56,
-      height: 56,
+      width: sizes.fab,
+      height: sizes.fab,
       borderRadius: radii.pill,
       backgroundColor: colors.primary,
       alignItems: 'center',

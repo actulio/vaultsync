@@ -94,6 +94,17 @@ export const radii = {
 export type RadiiScale = typeof radii;
 
 // ---------------------------------------------------------------------------
+// Sizes — control heights and fixed-size UI elements
+// ---------------------------------------------------------------------------
+
+export const sizes = {
+  control: 52,
+  fab: 56,
+} as const;
+
+export type SizesScale = typeof sizes;
+
+// ---------------------------------------------------------------------------
 // Typography — system font stack (San Francisco / Roboto)
 // ---------------------------------------------------------------------------
 

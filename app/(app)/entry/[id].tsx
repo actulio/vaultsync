@@ -8,8 +8,6 @@ import { copyAndScheduleClear } from '@/native/clipboardWorker';
 import { persistVault } from '@/vault/persist';
 import { deleteEntry } from '@/vault/mutations';
 
-const BUTTON_HEIGHT = 52;
-
 // ---------------------------------------------------------------------------
 // Field row — label + value + Copy button
 // ---------------------------------------------------------------------------
@@ -78,7 +76,7 @@ function Field({ label, value, onCopy, copyLabel }: FieldProps): JSX.Element {
 
 export default function EntryDetail(): JSX.Element {
   const { t } = useTranslation('vault');
-  const { colors, spacing, radii, type } = useTheme();
+  const { colors, spacing, radii, sizes, type } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const vault = useAuthStore((s) => s.vault);
@@ -105,7 +103,7 @@ export default function EntryDetail(): JSX.Element {
     },
     editBtn: {
       flex: 1,
-      height: BUTTON_HEIGHT,
+      height: sizes.control,
       backgroundColor: colors.primary,
       borderRadius: radii.lg,
       alignItems: 'center',
@@ -117,7 +115,7 @@ export default function EntryDetail(): JSX.Element {
     },
     deleteBtn: {
       flex: 1,
-      height: BUTTON_HEIGHT,
+      height: sizes.control,
       backgroundColor: colors.danger,
       borderRadius: radii.lg,
       alignItems: 'center',

@@ -5,10 +5,12 @@ import {
   darkColors,
   spacing,
   radii,
+  sizes,
   type as typeScale,
   type ColorTokens,
   type SpacingScale,
   type RadiiScale,
+  type SizesScale,
   type TypeScale,
 } from './tokens';
 
@@ -20,6 +22,7 @@ export type Theme = {
   colors: ColorTokens;
   spacing: SpacingScale;
   radii: RadiiScale;
+  sizes: SizesScale;
   type: TypeScale;
   isDark: boolean;
 };
@@ -28,6 +31,7 @@ const lightTheme: Theme = {
   colors: lightColors,
   spacing,
   radii,
+  sizes,
   type: typeScale,
   isDark: false,
 };
@@ -36,6 +40,7 @@ const darkTheme: Theme = {
   colors: darkColors,
   spacing,
   radii,
+  sizes,
   type: typeScale,
   isDark: true,
 };
