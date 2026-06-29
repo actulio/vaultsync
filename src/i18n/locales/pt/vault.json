@@ -18,7 +18,8 @@
     "edit": "Editar",
     "delete": "Excluir",
     "confirmDelete": "Excluir esta entrada?",
-    "body": "Conteúdo"
+    "body": "Conteúdo",
+    "cancel": "Cancelar"
   },
   "edit": {
     "titleLogin": "Login",
