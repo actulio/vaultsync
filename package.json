@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "packageManager": "pnpm@11.1.1",
   "dependencies": {
+    "@react-native-community/slider": "5.2.0",
     "expo": "~56.0.12",
     "expo-auth-session": "~56.0.14",
     "expo-clipboard": "~56.0.4",

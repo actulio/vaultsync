@@ -32,5 +32,13 @@
       "title": "Título", "username": "Usuário", "password": "Senha",
       "url": "URL", "notes": "Notas", "body": "Conteúdo"
     }
+  },
+  "generator": {
+    "length": "Comprimento",
+    "avoidAmbiguous": "Evitar ambíguos (0/O/l/1)",
+    "lower": "a–z",
+    "upper": "A–Z",
+    "digits": "0–9",
+    "symbols": "!@#"
   }
 }
