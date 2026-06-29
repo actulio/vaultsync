@@ -47,7 +47,7 @@ function Toggle({ label, value, onChange }: ToggleProps): JSX.Element {
 
 export default function GeneratorScreen(): JSX.Element {
   const { t } = useTranslation('vault');
-  const { colors, spacing, radii, sizes } = useTheme();
+  const { colors, spacing, radii, sizes, type } = useTheme();
 
   const [opts, setOpts] = useState<GeneratorOptions>(DEFAULT_OPTIONS);
   const [pw, setPw] = useState<string>('');
@@ -61,7 +61,7 @@ export default function GeneratorScreen(): JSX.Element {
   };
 
   // Re-generate whenever any option changes (including on mount).
-  useEffect(() => { void regen(); }, [opts.length, opts.lower, opts.upper, opts.digits, opts.symbols, opts.avoidAmbiguous]); // eslint-disable-line
+  useEffect(() => { void regen(); }, [opts.length, opts.lower, opts.upper, opts.digits, opts.symbols, opts.avoidAmbiguous]);
 
   const styles = StyleSheet.create({
     scroll: {
@@ -79,12 +79,9 @@ export default function GeneratorScreen(): JSX.Element {
       marginBottom: spacing.lg,
     },
     pwText: {
-      // fontFamily: 'monospace' is the one platform-neutral value (no token covers this).
+      ...type.mono,
+      // type.mono.fontFamily is 'Menlo' (iOS-only); override so Android renders monospaced.
       fontFamily: 'monospace',
-      fontSize: 17,
-      fontWeight: '500',
-      lineHeight: 24,
-      letterSpacing: 1,
       textAlign: 'center',
       color: colors.textPrimary,
     },

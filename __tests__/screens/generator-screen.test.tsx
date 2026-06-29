@@ -6,11 +6,18 @@ import GeneratorScreen from '../../app/(app)/(tabs)/generator';
 // Mocks — factories must be self-contained (no out-of-scope references)
 // -----------------------------------------------------------------------
 
-jest.mock('@react-native-community/slider', () => ({
-  __esModule: true,
-  // Stub the native Slider with a no-op component (native module — cannot run in Jest).
-  default: () => null,
-}));
+jest.mock('@react-native-community/slider', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const MockReact = require('react');
+  return {
+    __esModule: true,
+    // Renders a host View with testID so tests can fire onValueChange events.
+    // Native Slider cannot run in Jest; the View carries the prop for fireEvent.
+    default: ({ onValueChange }: { onValueChange?: (v: number) => void }) =>
+      // no-unsafe-call / no-unsafe-member-access are off for __tests__
+      MockReact.createElement('View', { testID: 'length-slider', onValueChange }),
+  };
+});
 
 jest.mock('@/generator/generate', () => ({
   generatePassword: jest.fn().mockResolvedValue('MockedPw-1234-AbCd'),
@@ -103,6 +110,28 @@ describe('GeneratorScreen', () => {
 
     await waitFor(() => {
       expect(getCopyMock()).toHaveBeenCalledWith('MockedPw-1234-AbCd', 30);
+    });
+  });
+
+  it('moving the Slider fires onValueChange → length change → generatePassword called again', async () => {
+    await render(<GeneratorScreen />);
+    await waitFor(() => {
+      expect(screen.getByText('MockedPw-1234-AbCd')).toBeTruthy();
+    });
+
+    const generateMock = getGenerateMock();
+    const callsBefore = generateMock.mock.calls.length;
+
+    // Fire slider value change — mock renders a View with testID 'length-slider'
+    const slider = screen.getByTestId('length-slider');
+    await fireEvent(slider, 'valueChange', 30);
+
+    await waitFor(() => {
+      expect(generateMock.mock.calls.length).toBeGreaterThan(callsBefore);
+      const lastCall = generateMock.mock.calls[generateMock.mock.calls.length - 1] as [
+        { length: number },
+      ];
+      expect(lastCall[0]).toMatchObject({ length: 30 });
     });
   });
 
