@@ -42,7 +42,7 @@ export default function ChangePasswordScreen(): JSX.Element {
 
       router.replace({
         pathname: '/(onboarding)/recovery-code',
-        params: { code: newRecoveryCode },
+        params: { code: newRecoveryCode, from: 'settings' },
       });
     } catch {
       setError(t('changePassword.errorWrongCurrent'));
@@ -115,6 +115,7 @@ export default function ChangePasswordScreen(): JSX.Element {
 
       <Text style={styles.fieldLabel}>{t('changePassword.current')}</Text>
       <TextInput
+        accessibilityLabel={t('changePassword.current')}
         style={styles.input}
         value={cur}
         onChangeText={setCur}
@@ -126,6 +127,7 @@ export default function ChangePasswordScreen(): JSX.Element {
 
       <Text style={styles.fieldLabel}>{t('changePassword.new')}</Text>
       <TextInput
+        accessibilityLabel={t('changePassword.new')}
         style={styles.input}
         value={npw}
         onChangeText={setNpw}
@@ -137,6 +139,7 @@ export default function ChangePasswordScreen(): JSX.Element {
 
       <Text style={styles.fieldLabel}>{t('changePassword.confirm')}</Text>
       <TextInput
+        accessibilityLabel={t('changePassword.confirm')}
         style={styles.input}
         value={conf}
         onChangeText={setConf}

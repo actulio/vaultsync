@@ -2,6 +2,7 @@ import { useEffect, useState, type JSX } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { loadPrefs, setAutoLockPref } from '@/settings/prefs';
+import { startAutoLock } from '@/auth/autoLock';
 import { useTheme } from '@/theme';
 
 /** Sentinel: never auto-lock (timeout the inactivity check can never reach). */
@@ -29,6 +30,7 @@ export default function AutoLockScreen(): JSX.Element {
 
   const choose = async (ms: number): Promise<void> => {
     await setAutoLockPref(ms);
+    startAutoLock(ms);
     setCurrentMs(ms);
   };
 

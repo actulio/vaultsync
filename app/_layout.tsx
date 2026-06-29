@@ -5,6 +5,7 @@ import { initI18n, detectLanguageFromTag, type SupportedLanguage } from '@/i18n'
 import { registerUiNamespaces } from '@/i18n/registerUiNamespaces';
 import { ThemeProvider } from '@/theme';
 import { startAutoLock } from '@/auth/autoLock';
+import { loadPrefs } from '@/settings/prefs';
 
 export default function RootLayout(): JSX.Element {
   useEffect(() => {
@@ -16,8 +17,11 @@ export default function RootLayout(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    const stop = startAutoLock();
-    return stop;
+    let stop: (() => void) | null = null;
+    void loadPrefs().then((p) => {
+      stop = startAutoLock(p.autoLockMs);
+    });
+    return () => stop?.();
   }, []);
 
   return (

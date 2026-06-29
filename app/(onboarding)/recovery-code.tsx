@@ -8,7 +8,7 @@ import { useTheme } from '@/theme';
 export default function RecoveryCode(): JSX.Element {
   const { t } = useTranslation('onboarding');
   const { colors, spacing, radii, type } = useTheme();
-  const { code } = useLocalSearchParams<{ code: string }>();
+  const { code, from } = useLocalSearchParams<{ code: string; from?: string }>();
   const [confirmed, setConfirmed] = useState(false);
 
   const styles = StyleSheet.create({
@@ -107,7 +107,13 @@ export default function RecoveryCode(): JSX.Element {
         accessibilityLabel={t('recoveryCode.cta')}
         accessibilityState={{ disabled: !confirmed }}
         disabled={!confirmed}
-        onPress={() => router.push('/(onboarding)/biometric')}
+        onPress={() => {
+          if (from === 'settings') {
+            router.replace('/(app)');
+          } else {
+            router.push('/(onboarding)/biometric');
+          }
+        }}
         style={({ pressed }) => [
           styles.cta,
           !confirmed && styles.ctaDisabled,
