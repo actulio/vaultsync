@@ -100,6 +100,8 @@ export type RadiiScale = typeof radii;
 export const sizes = {
   control: 52,
   fab: 56,
+  notesField: 100,
+  bodyField: 200,
 } as const;
 
 export type SizesScale = typeof sizes;
