@@ -1,0 +1,33 @@
+{
+  "rows": {
+    "language": "Idioma",
+    "autoLock": "Bloqueio automático",
+    "changePassword": "Alterar senha mestre"
+  },
+  "language": {
+    "title": "Idioma",
+    "pt": "Português",
+    "en": "Inglês"
+  },
+  "autoLock": {
+    "title": "Bloquear após inatividade",
+    "options": {
+      "1": "1 minuto",
+      "5": "5 minutos",
+      "15": "15 minutos",
+      "60": "1 hora",
+      "never": "Nunca"
+    }
+  },
+  "changePassword": {
+    "title": "Alterar senha mestre",
+    "body": "Você receberá um novo código de recuperação. O código atual deixará de ser válido.",
+    "current": "Senha atual",
+    "new": "Nova senha",
+    "confirm": "Confirme a nova senha",
+    "cta": "Alterar senha",
+    "errorTooShort": "A nova senha deve ter no mínimo 8 caracteres",
+    "errorMismatch": "As senhas não coincidem",
+    "errorWrongCurrent": "Senha atual incorreta"
+  }
+}

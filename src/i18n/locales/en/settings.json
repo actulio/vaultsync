@@ -1,0 +1,33 @@
+{
+  "rows": {
+    "language": "Language",
+    "autoLock": "Auto-lock",
+    "changePassword": "Change master password"
+  },
+  "language": {
+    "title": "Language",
+    "pt": "Portuguese",
+    "en": "English"
+  },
+  "autoLock": {
+    "title": "Lock after inactivity",
+    "options": {
+      "1": "1 minute",
+      "5": "5 minutes",
+      "15": "15 minutes",
+      "60": "1 hour",
+      "never": "Never"
+    }
+  },
+  "changePassword": {
+    "title": "Change master password",
+    "body": "You will receive a new recovery code. The current one will become invalid.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "cta": "Change password",
+    "errorTooShort": "The new password must be at least 8 characters",
+    "errorMismatch": "The passwords do not match",
+    "errorWrongCurrent": "Current password is incorrect"
+  }
+}

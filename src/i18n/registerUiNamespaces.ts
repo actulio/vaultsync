@@ -10,6 +10,8 @@ import ptAuth from './locales/pt/auth.json';
 import enAuth from './locales/en/auth.json';
 import ptVault from './locales/pt/vault.json';
 import enVault from './locales/en/vault.json';
+import ptSettings from './locales/pt/settings.json';
+import enSettings from './locales/en/settings.json';
 
 export function registerUiNamespaces(): void {
   addNamespace('pt', 'onboarding', ptOnboarding);
@@ -18,4 +20,6 @@ export function registerUiNamespaces(): void {
   addNamespace('en', 'auth', enAuth);
   addNamespace('pt', 'vault', ptVault);
   addNamespace('en', 'vault', enVault);
+  addNamespace('pt', 'settings', ptSettings);
+  addNamespace('en', 'settings', enSettings);
 }
