@@ -102,6 +102,11 @@ test('drains queue: uploadVaultFile called per item, remove called, ends with id
   expect(jest.mocked(uploadVaultFile)).toHaveBeenCalledTimes(2);
   expect(jest.mocked(remove)).toHaveBeenCalledWith(1);
   expect(jest.mocked(remove)).toHaveBeenCalledWith(2);
+  // After the drain, the last uploaded modifiedTime must be persisted as the stale-marker.
+  expect(jest.mocked(SecureStore.setItemAsync)).toHaveBeenCalledWith(
+    'drive_last_upload_iso',
+    '2025-06-01T00:00:00Z',
+  );
   // setSyncedNow() resets status → 'idle' and sets lastSyncedAt.
   expect(useSyncStore.getState().status).toBe('idle');
   expect(useSyncStore.getState().lastSyncedAt).not.toBeNull();

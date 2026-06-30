@@ -37,7 +37,7 @@ async function _run(): Promise<void> {
 
     // Gate 2: Network connectivity
     const net = await Network.getNetworkStateAsync();
-    if (!net.isConnected || !net.isInternetReachable) {
+    if (!net.isConnected || net.isInternetReachable === false) {
       useSyncStore.getState().setStatus('paused_offline');
       return;
     }
@@ -45,12 +45,19 @@ async function _run(): Promise<void> {
     useSyncStore.getState().setStatus('syncing');
 
     // 1) Drain push queue — upload current vault.enc for each pending item.
+    //    Track the last uploaded modifiedTime so the subsequent pull check
+    //    can use it as the stale-marker, avoiding a redundant re-download.
+    let lastUploadedModifiedTime: string | null = null;
     let head = await peek();
     while (head) {
       const bytes = await VaultStore.read('vault.enc');
-      await uploadVaultFile(bytes);
+      const uploaded = await uploadVaultFile(bytes);
+      lastUploadedModifiedTime = uploaded.modifiedTime;
       await remove(head.id);
       head = await peek();
+    }
+    if (lastUploadedModifiedTime !== null) {
+      await SecureStore.setItemAsync(LAST_UPLOAD_KEY, lastUploadedModifiedTime);
     }
 
     // 2) Pull if remote is newer than the last upload we recorded.
@@ -87,6 +94,6 @@ async function _run(): Promise<void> {
     useSyncStore.getState().setQueueDepth(await count());
     useSyncStore.getState().setSyncedNow();
   } catch (e) {
-    useSyncStore.getState().setStatus('error', (e as Error).message);
+    useSyncStore.getState().setStatus('error', e instanceof Error ? e.message : String(e));
   }
 }

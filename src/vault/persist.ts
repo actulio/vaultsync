@@ -10,6 +10,7 @@ import type { VaultV1 } from '@/vault/types';
 import { VaultStore } from '@/native/keystore';
 import { enqueuePush } from '@/sync/queue';
 import { syncOnce } from '@/sync/orchestrator';
+import { useSyncStore } from '@/sync/store';
 
 /**
  * Re-encrypt and atomically write the vault payload with the SAME master key
@@ -54,10 +55,17 @@ export async function persistVault(vault: VaultV1, masterKey: Uint8Array): Promi
   enqueueSync();
 }
 
-/** Fire-and-forget: enqueue a push then kick off a sync cycle. */
+/** Fire-and-forget: enqueue a push then kick off a sync cycle.
+ * If enqueuePush fails the error is surfaced via the sync store so it is
+ * visible in the UI; syncOnce still fires so a later drain can recover.
+ */
 function enqueueSync(): void {
   void (async () => {
-    await enqueuePush();
+    try {
+      await enqueuePush();
+    } catch (e) {
+      useSyncStore.getState().setStatus('error', e instanceof Error ? e.message : String(e));
+    }
     void syncOnce();
   })();
 }

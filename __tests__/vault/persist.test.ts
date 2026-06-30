@@ -8,6 +8,9 @@ import { _internalAssemble } from '@/auth/onboarding';
 import { addLogin } from '@/vault/mutations';
 import { aeadDecrypt } from '@/crypto/aead';
 import { decodeVaultFile, serializeVaultHeader } from '@/vault/format';
+import { useSyncStore } from '@/sync/store';
+import { enqueuePush } from '@/sync/queue';
+import { syncOnce } from '@/sync/orchestrator';
 import type { Login, VaultV1 } from '@/vault/types';
 
 const mockMemoryStore = new Map<string, Uint8Array>();
@@ -32,7 +35,13 @@ jest.mock('@/native/keystore', () => ({
   },
 }));
 
-beforeEach(() => mockMemoryStore.clear());
+beforeEach(() => {
+  mockMemoryStore.clear();
+  // Reset sync store so status-assertions start from a clean slate.
+  useSyncStore.setState(
+    { status: 'idle', lastSyncedAt: null, queueDepth: 0 } as Parameters<typeof useSyncStore.setState>[0],
+  );
+});
 
 /** Seed a real on-disk vault.enc and return its masterKey + decoded vault object. */
 async function seedVault(hint = 'h'): Promise<{ masterKey: Uint8Array; vault: VaultV1 }> {
@@ -75,6 +84,24 @@ describe('persistVault', () => {
     await persistVault(addLogin(vault, { title: 'x', username: '', password: '' }), masterKey);
 
     expect(mockMemoryStore.get('masterKey.wrapped')).toBe(wrappedBefore);
+  });
+
+  it('when enqueuePush rejects: surfaces error via sync store and still calls syncOnce', async () => {
+    const { masterKey, vault } = await seedVault();
+    jest.mocked(enqueuePush).mockRejectedValueOnce(new Error('SQLite: disk full'));
+
+    await persistVault(vault, masterKey);
+
+    // Drain the microtask queue so the fire-and-forget IIFE settles.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const state = useSyncStore.getState();
+    expect(state.status).toBe('error');
+    if (state.status === 'error') {
+      expect(state.message).toBe('SQLite: disk full');
+    }
+    expect(jest.mocked(syncOnce)).toHaveBeenCalled();
   });
 
   it('throws when decrypting under a tampered/mismatched AAD (header is bound)', async () => {
