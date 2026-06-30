@@ -1,0 +1,14 @@
+{
+  "title": "Sincronização Google Drive",
+  "status": {
+    "idle": "Sincronizado",
+    "syncing": "Sincronizando…",
+    "paused_no_token": "Não conectado",
+    "paused_offline": "Sem conexão",
+    "error": "Erro de sincronização"
+  },
+  "lastSynced": "Última: {{time}}",
+  "queueDepth": "Fila: {{n}} pendentes",
+  "connect": "Conectar Google Drive",
+  "syncNow": "Sincronizar agora"
+}

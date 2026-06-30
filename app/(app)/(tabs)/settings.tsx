@@ -14,6 +14,7 @@ export default function SettingsScreen(): JSX.Element {
     { label: t('rows.language'), path: '/(app)/settings/language' },
     { label: t('rows.autoLock'), path: '/(app)/settings/auto-lock' },
     { label: t('rows.changePassword'), path: '/(app)/settings/change-password' },
+    { label: t('rows.sync'), path: '/(app)/settings/sync' },
   ];
 
   const styles = StyleSheet.create({

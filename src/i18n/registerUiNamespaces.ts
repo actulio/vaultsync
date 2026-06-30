@@ -12,6 +12,8 @@ import ptVault from './locales/pt/vault.json';
 import enVault from './locales/en/vault.json';
 import ptSettings from './locales/pt/settings.json';
 import enSettings from './locales/en/settings.json';
+import ptSync from './locales/pt/sync.json';
+import enSync from './locales/en/sync.json';
 
 export function registerUiNamespaces(): void {
   addNamespace('pt', 'onboarding', ptOnboarding);
@@ -22,4 +24,6 @@ export function registerUiNamespaces(): void {
   addNamespace('en', 'vault', enVault);
   addNamespace('pt', 'settings', ptSettings);
   addNamespace('en', 'settings', enSettings);
+  addNamespace('pt', 'sync', ptSync);
+  addNamespace('en', 'sync', enSync);
 }

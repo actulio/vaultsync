@@ -6,6 +6,7 @@ import { registerUiNamespaces } from '@/i18n/registerUiNamespaces';
 import { ThemeProvider } from '@/theme';
 import { startAutoLock } from '@/auth/autoLock';
 import { loadPrefs } from '@/settings/prefs';
+import { startSyncOnForeground } from '@/sync/hooks';
 
 export default function RootLayout(): JSX.Element {
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function RootLayout(): JSX.Element {
     });
     return () => stop?.();
   }, []);
+
+  useEffect(() => startSyncOnForeground(), []);
 
   return (
     <ThemeProvider>

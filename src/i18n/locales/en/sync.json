@@ -1,0 +1,14 @@
+{
+  "title": "Google Drive sync",
+  "status": {
+    "idle": "Synced",
+    "syncing": "Syncing…",
+    "paused_no_token": "Not connected",
+    "paused_offline": "Offline",
+    "error": "Sync error"
+  },
+  "lastSynced": "Last: {{time}}",
+  "queueDepth": "Queue: {{n}} pending",
+  "connect": "Connect Google Drive",
+  "syncNow": "Sync now"
+}

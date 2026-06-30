@@ -2,7 +2,8 @@
   "rows": {
     "language": "Language",
     "autoLock": "Auto-lock",
-    "changePassword": "Change master password"
+    "changePassword": "Change master password",
+    "sync": "Google Drive sync"
   },
   "language": {
     "title": "Language",

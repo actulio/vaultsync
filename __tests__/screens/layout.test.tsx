@@ -22,6 +22,10 @@ jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageTag: 'pt-BR' }],
 }));
 
+jest.mock('@/sync/hooks', () => ({
+  startSyncOnForeground: jest.fn(() => () => {}),
+}));
+
 function getStartAutoLock() {
   return jest.requireMock<{ startAutoLock: jest.Mock }>('@/auth/autoLock').startAutoLock;
 }
