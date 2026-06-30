@@ -8,6 +8,8 @@ import {
 } from '@/vault/format';
 import type { VaultV1 } from '@/vault/types';
 import { VaultStore } from '@/native/keystore';
+import { enqueuePush } from '@/sync/queue';
+import { syncOnce } from '@/sync/orchestrator';
 
 /**
  * Re-encrypt and atomically write the vault payload with the SAME master key
@@ -52,7 +54,10 @@ export async function persistVault(vault: VaultV1, masterKey: Uint8Array): Promi
   enqueueSync();
 }
 
-/** Plan 4 implements the Drive push. No-op stub here — Plan 3 does not assert sync. */
+/** Fire-and-forget: enqueue a push then kick off a sync cycle. */
 function enqueueSync(): void {
-  // intentionally empty
+  void (async () => {
+    await enqueuePush();
+    void syncOnce();
+  })();
 }

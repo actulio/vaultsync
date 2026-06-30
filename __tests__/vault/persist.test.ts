@@ -1,3 +1,8 @@
+// Mock sync dependencies so the fire-and-forget in enqueueSync() does not
+// touch real native modules (SQLite, Drive, Network) during persist tests.
+jest.mock('@/sync/queue', () => ({ enqueuePush: jest.fn().mockResolvedValue(undefined) }));
+jest.mock('@/sync/orchestrator', () => ({ syncOnce: jest.fn().mockResolvedValue(undefined) }));
+
 import { persistVault } from '@/vault/persist';
 import { _internalAssemble } from '@/auth/onboarding';
 import { addLogin } from '@/vault/mutations';
