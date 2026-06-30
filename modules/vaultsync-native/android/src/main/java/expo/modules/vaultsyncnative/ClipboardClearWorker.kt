@@ -8,11 +8,19 @@ import androidx.work.WorkerParameters
 
 class ClipboardClearWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
   override fun doWork(): Result {
-    val cm = applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val expected = inputData.getString(KEY_EXPECTED) ?: return Result.success()
-    val current = cm.primaryClip?.getItemAt(0)?.text?.toString()
-    if (current == expected) {
-      cm.setPrimaryClip(ClipData.newPlainText("", ""))
+    try {
+      val cm = applicationContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+      // primaryClip can be non-null with itemCount == 0; getItemAt(0) would throw
+      // IndexOutOfBounds and fail the worker (WorkManager would then retry). Guard it.
+      val clip = cm.primaryClip
+      val current =
+        if (clip != null && clip.itemCount > 0) clip.getItemAt(0)?.text?.toString() else null
+      if (current == expected) {
+        cm.setPrimaryClip(ClipData.newPlainText("", ""))
+      }
+    } catch (e: Exception) {
+      // Best-effort clear: never fail the worker on a transient clipboard error.
     }
     return Result.success()
   }
