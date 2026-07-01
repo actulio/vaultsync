@@ -13,6 +13,10 @@ interface ViewNodeLike {
   val idEntry: String?           // android:id resource name
   val htmlInfo: HtmlInfoLike?
   val children: List<ViewNodeLike>
+
+  // Web autofill contexts (WebView/browser) expose the origin here; native views leave it null.
+  // Default getter keeps existing ViewNodeLike fakes source-compatible (no forced override).
+  val webDomain: String? get() = null
 }
 
 data class HtmlInfoLike(val tag: String, val attributes: Map<String, String>)
@@ -82,6 +86,21 @@ class FieldDetector {
     return null
   }
 
+  /**
+   * DFS for the first non-blank webDomain in the node tree.
+   *
+   * `webDomain` lives on [AssistStructure.ViewNode] (surfaced via [ViewNodeLike.webDomain]),
+   * NOT on [AssistStructure] itself — so the service cannot read it off the structure directly.
+   * Native app screens return null here; browser/WebView screens carry the origin on some node.
+   */
+  fun webDomain(root: ViewNodeLike): String? {
+    root.webDomain?.takeIf { it.isNotEmpty() }?.let { return it }
+    for (child in root.children) {
+      webDomain(child)?.let { return it }
+    }
+    return null
+  }
+
   /** Adapter to wrap a real AssistStructure.ViewNode. */
   fun adapt(node: AssistStructure.ViewNode): ViewNodeLike = object : ViewNodeLike {
     override val autofillId get() = node.autofillId
@@ -92,5 +111,6 @@ class FieldDetector {
       HtmlInfoLike(hi.tag, hi.attributes?.associate { it.first to it.second } ?: emptyMap())
     }
     override val children get() = (0 until node.childCount).map { adapt(node.getChildAt(it)) }
+    override val webDomain get() = node.webDomain
   }
 }

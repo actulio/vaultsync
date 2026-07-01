@@ -63,6 +63,7 @@ class FieldDetectorTest {
         html: HtmlInfoLike? = null,
         kids: List<ViewNodeLike> = emptyList(),
         autofillId: AutofillId = freshId(),
+        web: String? = null,
     ): ViewNodeLike = object : ViewNodeLike {
         override val autofillId = autofillId
         override val autofillHints = hints
@@ -70,6 +71,7 @@ class FieldDetectorTest {
         override val idEntry = id
         override val htmlInfo = html
         override val children = kids
+        override val webDomain = web
     }
 
     // ── Branch 1: autofillHints ─────────────────────────────────────────────
@@ -265,5 +267,29 @@ class FieldDetectorTest {
         val r = FieldDetector().walk(tree)
         assertNotNull(r)
         assertEquals(pwId, r!!.passwordId)
+    }
+
+    // ── webDomain() DFS helper ────────────────────────────────────────────────
+
+    @Test fun webDomainReturnsNullWhenNoNodeCarriesIt() {
+        val tree = walkNode(kids = listOf(walkNode(id = "etUsername"), walkNode(id = "etPassword")))
+        assertNull(FieldDetector().webDomain(tree))
+    }
+
+    @Test fun webDomainFoundOnNestedChild() {
+        val tree = walkNode(kids = listOf(
+            walkNode(),
+            walkNode(kids = listOf(walkNode(web = "example.com"))),
+        ))
+        assertEquals("example.com", FieldDetector().webDomain(tree))
+    }
+
+    @Test fun webDomainReturnsFirstNonBlankInDfsOrder() {
+        // Root is blank, first child blank/empty, second child has the origin → skip blanks.
+        val tree = walkNode(web = "", kids = listOf(
+            walkNode(web = ""),
+            walkNode(web = "login.example.org"),
+        ))
+        assertEquals("login.example.org", FieldDetector().webDomain(tree))
     }
 }
