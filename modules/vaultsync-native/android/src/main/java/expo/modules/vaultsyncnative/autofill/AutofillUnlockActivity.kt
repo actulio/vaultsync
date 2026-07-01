@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.service.autofill.FillResponse
+import android.util.Log
 import android.view.autofill.AutofillManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -45,6 +46,7 @@ class AutofillUnlockActivity : FragmentActivity() {
           }
           setResult(Activity.RESULT_OK, replyIntent)
         } catch (e: Exception) {
+          Log.w("VaultSync", "Autofill unlock failed", e)
           setResult(Activity.RESULT_CANCELED)
         }
         finish()
