@@ -4,5 +4,23 @@
       android:name=".BiometricPromptActivity"
       android:exported="false"
       android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+    <service
+      android:name=".autofill.VaultAutofillService"
+      android:label="@string/autofill_service_label"
+      android:exported="true"
+      android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.autofill.AutofillService" />
+      </intent-filter>
+      <meta-data
+        android:name="android.autofill"
+        android:resource="@xml/autofill_service" />
+    </service>
+
+    <activity android:name=".autofill.AutofillUnlockActivity" android:exported="false"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    <activity android:name=".autofill.AutofillSaveActivity" android:exported="false"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar" />
   </application>
 </manifest>
