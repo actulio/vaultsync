@@ -148,6 +148,11 @@ class FieldDetectorTest {
         assertEquals(FieldDetector.Kind.USERNAME, FieldDetector().classify(classifyNode(id = "login_field")))
     }
 
+    @Test fun classifyBranch3_idEntryUserId() {
+        // "userId" contains "user" keyword but not "username" — must still resolve to USERNAME
+        assertEquals(FieldDetector.Kind.USERNAME, FieldDetector().classify(classifyNode(id = "userId")))
+    }
+
     // ── Branch 4: HTML input type and name attributes ───────────────────────
 
     @Test fun classifyBranch4_htmlTypePassword() {
@@ -173,6 +178,24 @@ class FieldDetectorTest {
     @Test fun classifyBranch4_htmlNameEmail() {
         val n = classifyNode(html = HtmlInfoLike("input", mapOf("name" to "email_address")))
         assertEquals(FieldDetector.Kind.USERNAME, FieldDetector().classify(n))
+    }
+
+    @Test fun classifyBranch4_htmlNameLogin() {
+        // No "type" attr — must fall through to name-substring branch; "login_field" contains "login"
+        val n = classifyNode(html = HtmlInfoLike("input", mapOf("name" to "login_field")))
+        assertEquals(FieldDetector.Kind.USERNAME, FieldDetector().classify(n))
+    }
+
+    // ── Precedence: Branch 1 (autofillHint) wins over Branch 2 (inputType) ──
+
+    @Test fun classifyPrecedence_autofillHintPasswordBeatsEmailInputType() {
+        // Conflicting signals: hint says PASSWORD, inputType says USERNAME (email).
+        // Branch 1 executes first via early return → must resolve to PASSWORD.
+        val n = classifyNode(
+            hints = arrayOf(View.AUTOFILL_HINT_PASSWORD),
+            input = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
+        )
+        assertEquals(FieldDetector.Kind.PASSWORD, FieldDetector().classify(n))
     }
 
     @Test fun classifyNone_noSignals() {
