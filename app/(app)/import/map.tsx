@@ -12,7 +12,7 @@ type MappableField = (typeof MAPPABLE_FIELDS)[number];
 export default function Map(): JSX.Element {
   const { t } = useTranslation('import');
   const { colors, spacing, radii, sizes, type } = useTheme();
-  const { content } = useLocalSearchParams<{ content: string; uri: string }>();
+  const { content, uri } = useLocalSearchParams<{ content: string; uri: string }>();
   const preview = useMemo(() => buildPreview(content ?? ''), [content]);
   const [mapping, setMapping] = useState<Mapping>(preview.inferredMapping ?? {});
 
@@ -22,7 +22,7 @@ export default function Map(): JSX.Element {
   const goNext = (): void => {
     router.push({
       pathname: '/(app)/import/confirm',
-      params: { content: content ?? '', mapping: JSON.stringify(mapping) },
+      params: { content: content ?? '', uri, mapping: JSON.stringify(mapping) },
     });
   };
 
