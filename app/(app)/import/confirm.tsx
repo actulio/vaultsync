@@ -7,6 +7,15 @@ import { rowsToEntries } from '@/import/parsers';
 import type { Mapping } from '@/import/presets';
 import { useTheme } from '@/theme';
 
+/** Parses the `mapping` route param, falling back to an empty mapping on malformed input. */
+function parseMapping(mapping: string | undefined): Mapping {
+  try {
+    return JSON.parse(mapping ?? '{}') as Mapping;
+  } catch {
+    return {};
+  }
+}
+
 export default function Confirm(): JSX.Element {
   const { t } = useTranslation('import');
   const { colors, spacing, radii, sizes, type } = useTheme();
@@ -16,7 +25,7 @@ export default function Confirm(): JSX.Element {
     mapping: string;
   }>();
 
-  const map = useMemo<Mapping>(() => JSON.parse(mapping ?? '{}') as Mapping, [mapping]);
+  const map = useMemo<Mapping>(() => parseMapping(mapping), [mapping]);
   const preview = useMemo(() => buildPreview(content ?? ''), [content]);
   const sim = useMemo(() => rowsToEntries(preview.rows, map), [preview.rows, map]);
 
@@ -24,10 +33,15 @@ export default function Confirm(): JSX.Element {
   const notes = sim.rows.filter((e) => e.type === 'note').length;
 
   const go = async (): Promise<void> => {
-    await executeImport(preview.rows, map);
-    if (uri) await deleteTempFile(uri);
-    Alert.alert(t('preview', { logins, notes, skipped: sim.skipped }), t('deleteReminder'));
-    router.replace('/(app)/(tabs)');
+    try {
+      await executeImport(preview.rows, map);
+      Alert.alert(t('preview', { logins, notes, skipped: sim.skipped }), t('deleteReminder'));
+      router.replace('/(app)/(tabs)');
+    } catch {
+      Alert.alert(t('importError'));
+    } finally {
+      if (uri) await deleteTempFile(uri);
+    }
   };
 
   const styles = StyleSheet.create({

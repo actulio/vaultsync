@@ -13,5 +13,6 @@
   "next": "Avançar",
   "preview": "Importar {{logins}} logins, {{notes}} notas seguras, ignorar {{skipped}} linhas",
   "confirm": "Importar",
-  "deleteReminder": "Lembrete: apague o CSV de Downloads — ele contém suas senhas em texto puro."
+  "deleteReminder": "Lembrete: apague o CSV de Downloads — ele contém suas senhas em texto puro.",
+  "importError": "Falha na importação. Seu cofre não foi alterado — tente novamente."
 }

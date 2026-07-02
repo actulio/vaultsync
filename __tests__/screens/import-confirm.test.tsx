@@ -1,6 +1,7 @@
 import React from 'react';
 import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import type * as CsvImporterModule from '@/import/csvImporter';
 import ConfirmScreen from '../../app/(app)/import/confirm';
 
@@ -111,5 +112,28 @@ describe('Import Confirm screen', () => {
       expect(getCsvImporter().executeImport).toHaveBeenCalled();
     });
     expect(getCsvImporter().deleteTempFile).not.toHaveBeenCalled();
+  });
+
+  it('shows an error alert and still deletes the temp file when executeImport rejects', async () => {
+    getCsvImporter().executeImport.mockRejectedValue(new Error('cannot import: vault is locked'));
+
+    await render(<ConfirmScreen />);
+
+    await fireEvent.press(screen.getByText('Importar'));
+
+    await waitFor(() => {
+      expect(getCsvImporter().deleteTempFile).toHaveBeenCalledWith('file:///tmp/import.csv');
+    });
+    expect(Alert.alert).toHaveBeenCalledWith('Falha na importação. Seu cofre não foi alterado — tente novamente.');
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('falls back to an empty mapping and does not throw when the mapping param is malformed', async () => {
+    setParams({ content: CSV_CONTENT, uri: 'file:///tmp/import.csv', mapping: '{not json' });
+
+    await render(<ConfirmScreen />);
+
+    // With an empty mapping every row is unmapped, so all rows are skipped.
+    expect(screen.getByText('Importar 0 logins, 0 notas seguras, ignorar 2 linhas')).toBeTruthy();
   });
 });

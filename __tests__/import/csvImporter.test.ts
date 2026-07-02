@@ -14,10 +14,12 @@ jest.mock('expo-file-system/legacy', () => ({
   deleteAsync: jest.fn(),
 }));
 
-import { buildPreview, executeImport } from '@/import/csvImporter';
+import { buildPreview, executeImport, pickCsv } from '@/import/csvImporter';
 import { persistVault } from '@/vault/persist';
 import { useAuthStore } from '@/auth/store';
 import type { Login, VaultV1 } from '@/vault/types';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 
 // -----------------------------------------------------------------------
 // Fixtures
@@ -49,6 +51,45 @@ const existingVault: VaultV1 = {
 beforeEach(() => {
   jest.clearAllMocks();
   useAuthStore.getState().reset();
+});
+
+// -----------------------------------------------------------------------
+// pickCsv
+// -----------------------------------------------------------------------
+
+describe('pickCsv', () => {
+  it('deletes the temp cache copy immediately after reading its content', async () => {
+    const asset: DocumentPicker.DocumentPickerAsset = {
+      name: 'export.csv',
+      uri: 'file:///tmp/export.csv',
+      lastModified: 0,
+    };
+    jest.mocked(DocumentPicker.getDocumentAsync).mockResolvedValue({
+      canceled: false,
+      assets: [asset],
+    });
+    jest.mocked(FileSystem.readAsStringAsync).mockResolvedValue(ONE_PASSWORD_CSV);
+
+    const result = await pickCsv();
+
+    expect(result).toEqual({ tmpUri: asset.uri, content: ONE_PASSWORD_CSV });
+    expect(jest.mocked(FileSystem.deleteAsync)).toHaveBeenCalledWith(asset.uri, {
+      idempotent: true,
+    });
+  });
+
+  it('returns null without reading or deleting anything when the picker is canceled', async () => {
+    jest.mocked(DocumentPicker.getDocumentAsync).mockResolvedValue({
+      canceled: true,
+      assets: null,
+    });
+
+    const result = await pickCsv();
+
+    expect(result).toBeNull();
+    expect(jest.mocked(FileSystem.readAsStringAsync)).not.toHaveBeenCalled();
+    expect(jest.mocked(FileSystem.deleteAsync)).not.toHaveBeenCalled();
+  });
 });
 
 // -----------------------------------------------------------------------

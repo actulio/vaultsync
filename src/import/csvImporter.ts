@@ -26,6 +26,12 @@ export async function pickCsv(): Promise<{ tmpUri: string; content: string } | n
   if (res.canceled || res.assets.length === 0) return null;
   const asset = res.assets[0]!;
   const content = await FileSystem.readAsStringAsync(asset.uri);
+  // The full content is now in memory — the on-disk plaintext copy that
+  // expo-document-picker wrote into app cache (copyToCacheDirectory: true)
+  // is no longer needed. Delete it immediately so it can't survive a
+  // cancel/back-out or a later import failure (best-effort; the caller's
+  // later deleteTempFile(uri) is a harmless idempotent no-op after this).
+  await deleteTempFile(asset.uri);
   return { tmpUri: asset.uri, content };
 }
 

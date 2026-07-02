@@ -13,6 +13,7 @@ import android.service.autofill.FillResponse
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveInfo
 import android.service.autofill.SaveRequest
+import android.util.Log
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.RemoteViews
@@ -153,6 +154,13 @@ class VaultAutofillService : AutofillService() {
   }
 
   private fun postNoMatchNotification(packageName: String?, webDomain: String?) {
-    notifier.notifyMiss(packageName, webDomain)
+    // Defensive: notifyMiss touches NotificationManager/PendingIntent, which can throw on odd
+    // OEM builds. Swallow + log so a notify failure never prevents cb.onSuccess(...) below from
+    // running (losing that would break the FillCallback contract and drop the save-only response).
+    try {
+      notifier.notifyMiss(packageName, webDomain)
+    } catch (e: Exception) {
+      Log.w("VaultSync", "fallback notify failed", e)
+    }
   }
 }
