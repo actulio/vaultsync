@@ -8,18 +8,61 @@ export type ParseResult = {
   inferredPreset?: string;
 };
 
-export function detectPreset(headers: string[]): { name: string; mapping: Mapping } | null {
-  for (const p of PRESETS) {
-    const required = ['title', 'username', 'password'] as const;
-    const found = required.every((k) => headers.includes(p.mapping[k]!));
-    if (found) return p;
-  }
-  return null;
+/** The mapping keys that name a CSV column (i.e. everything except the fixed `type` discriminant). */
+const COLUMN_KEYS = ['title', 'url', 'username', 'password', 'notes'] as const;
+
+/** The header names a preset's mapping actually uses, in preset-defined order. */
+function mappedColumns(mapping: Mapping): string[] {
+  return COLUMN_KEYS.map((k) => mapping[k]).filter((v): v is string => typeof v === 'string');
 }
 
-export function parseCsv(content: string): { headers: string[]; rows: Record<string, string>[] } {
+/**
+ * Pick the best-fitting preset for a header row.
+ *
+ * A preset must first pass the gate: its title/username/password columns must
+ * all be present in the header row. Among gate-passing presets, a "full
+ * match" — every one of the preset's mapped columns present — beats a
+ * partial match (some mapped column, e.g. LastPass's `extra`, missing).
+ * Within the same match tier, the preset mapping the most columns wins
+ * (most specific); ties fall back to `PRESETS` declaration order.
+ */
+export function detectPreset(headers: string[]): { name: string; mapping: Mapping } | null {
+  const headerSet = new Set(headers);
+  const required = ['title', 'username', 'password'] as const;
+
+  const candidates = PRESETS.filter((p) =>
+    required.every((k) => {
+      const col = p.mapping[k];
+      return col !== undefined && headerSet.has(col);
+    }),
+  ).map((p) => {
+    const columns = mappedColumns(p.mapping);
+    return {
+      preset: p,
+      columnCount: columns.length,
+      isFullMatch: columns.every((c) => headerSet.has(c)),
+    };
+  });
+
+  if (candidates.length === 0) return null;
+
+  const fullMatches = candidates.filter((c) => c.isFullMatch);
+  const pool = fullMatches.length > 0 ? fullMatches : candidates;
+
+  let best = pool[0]!;
+  for (const c of pool) {
+    if (c.columnCount > best.columnCount) best = c;
+  }
+  return { name: best.preset.name, mapping: best.preset.mapping };
+}
+
+export function parseCsv(content: string): {
+  headers: string[];
+  rows: Record<string, string>[];
+  errorCount: number;
+} {
   const parsed = Papa.parse<Record<string, string>>(content, { header: true, skipEmptyLines: true });
-  return { headers: parsed.meta.fields ?? [], rows: parsed.data };
+  return { headers: parsed.meta.fields ?? [], rows: parsed.data, errorCount: parsed.errors.length };
 }
 
 export function rowsToEntries(

@@ -15,6 +15,7 @@ jest.mock('expo-file-system/legacy', () => ({
 }));
 
 import { buildPreview, executeImport, pickCsv } from '@/import/csvImporter';
+import { rowsToEntries } from '@/import/parsers';
 import { persistVault } from '@/vault/persist';
 import { useAuthStore } from '@/auth/store';
 import type { Login, VaultV1 } from '@/vault/types';
@@ -125,6 +126,7 @@ describe('buildPreview', () => {
       password: 'Password',
       notes: 'Notes',
     });
+    expect(preview.errorCount).toBe(0);
   });
 });
 
@@ -141,8 +143,11 @@ describe('executeImport', () => {
     const preview = buildPreview(ONE_PASSWORD_CSV);
     const mapping = preview.inferredMapping;
     if (!mapping) throw new Error('expected an inferred mapping for the 1Password fixture');
+    // Parse once (as confirm.tsx now does) and hand the already-parsed
+    // entries to executeImport — it no longer parses rows itself.
+    const { rows: entries, skipped } = rowsToEntries(preview.rows, mapping);
 
-    const result = await executeImport(preview.rows, mapping);
+    const result = await executeImport(entries, skipped);
 
     // One row has no title -> skipped; the other imports as a login.
     expect(result).toEqual({ added: 1, skipped: 1 });
@@ -172,8 +177,9 @@ describe('executeImport', () => {
     const preview = buildPreview(ONE_PASSWORD_CSV);
     const mapping = preview.inferredMapping;
     if (!mapping) throw new Error('expected an inferred mapping for the 1Password fixture');
+    const { rows: entries, skipped } = rowsToEntries(preview.rows, mapping);
 
-    await expect(executeImport(preview.rows, mapping)).rejects.toThrow(/locked/);
+    await expect(executeImport(entries, skipped)).rejects.toThrow(/locked/);
     expect(jest.mocked(persistVault)).not.toHaveBeenCalled();
   });
 });

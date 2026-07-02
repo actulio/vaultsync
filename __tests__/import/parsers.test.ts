@@ -16,17 +16,46 @@ describe('detectPreset', () => {
     const preset = detectPreset(['foo', 'bar', 'baz']);
     expect(preset).toBeNull();
   });
+
+  it('detects Chrome (not LastPass) from a header row lacking `extra` — regression for the mislabel', () => {
+    // Chrome and LastPass both gate on name/url/username/password. Without an
+    // `extra` column, LastPass is only a partial match (5 mapped columns, 1
+    // missing) while Chrome is a full match (4/4) — Chrome must win.
+    const preset = detectPreset(['name', 'url', 'username', 'password']);
+    expect(preset?.name).toBe('Chrome');
+  });
+
+  it('detects LastPass (not Chrome) from a header row that includes `extra`', () => {
+    // Both Chrome and LastPass are full matches here, but LastPass maps more
+    // columns (5 vs 4) so it is more specific and must win.
+    const preset = detectPreset(['name', 'url', 'username', 'password', 'extra']);
+    expect(preset?.name).toBe('LastPass');
+  });
+
+  it('detects Bitwarden from its header row', () => {
+    const preset = detectPreset(['name', 'login_uri', 'login_username', 'login_password', 'notes']);
+    expect(preset?.name).toBe('Bitwarden');
+  });
 });
 
 describe('parseCsv', () => {
-  it('returns the header list and parsed rows for a small CSV string', () => {
+  it('returns the header list, parsed rows, and a zero error count for a well-formed CSV string', () => {
     const content = 'a,b\n1,2\n3,4\n';
-    const { headers, rows } = parseCsv(content);
+    const { headers, rows, errorCount } = parseCsv(content);
     expect(headers).toEqual(['a', 'b']);
     expect(rows).toEqual([
       { a: '1', b: '2' },
       { a: '3', b: '4' },
     ]);
+    expect(errorCount).toBe(0);
+  });
+
+  it('surfaces a positive error count for malformed rows instead of silently dropping them', () => {
+    // Header declares 2 fields; the second data row has 4 — a mismatched
+    // field count papaparse flags as a row-level error.
+    const content = 'a,b\n1,2\n3,4,5,6\n';
+    const { errorCount } = parseCsv(content);
+    expect(errorCount).toBeGreaterThan(0);
   });
 });
 

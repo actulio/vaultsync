@@ -34,7 +34,7 @@ export default function Confirm(): JSX.Element {
 
   const go = async (): Promise<void> => {
     try {
-      await executeImport(preview.rows, map);
+      await executeImport(sim.rows, sim.skipped);
       Alert.alert(t('preview', { logins, notes, skipped: sim.skipped }), t('deleteReminder'));
       router.replace('/(app)/(tabs)');
     } catch {
@@ -79,6 +79,9 @@ export default function Confirm(): JSX.Element {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>{t('title')}</Text>
       <Text style={styles.preview}>{t('preview', { logins, notes, skipped: sim.skipped })}</Text>
+      {preview.errorCount > 0 && (
+        <Text style={styles.preview}>{t('parseErrors', { count: preview.errorCount })}</Text>
+      )}
       <Pressable accessibilityRole="button" onPress={() => void go()} style={styles.cta}>
         <Text style={styles.ctaLabel}>{t('confirm')}</Text>
       </Pressable>

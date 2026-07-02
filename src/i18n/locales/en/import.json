@@ -12,6 +12,7 @@
   },
   "next": "Next",
   "preview": "Import {{logins}} logins, {{notes}} secure notes, skip {{skipped}} rows",
+  "parseErrors": "{{count}} row(s) could not be parsed and were skipped",
   "confirm": "Import",
   "deleteReminder": "Reminder: delete the CSV from Downloads — it contains your passwords in plain text.",
   "importError": "Import failed. Your vault was not changed — please try again."

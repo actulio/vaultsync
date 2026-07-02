@@ -1,14 +1,16 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { detectPreset, parseCsv, rowsToEntries } from './parsers';
+import { detectPreset, parseCsv } from './parsers';
 import type { Mapping } from './presets';
 import { addLogin, addNote } from '@/vault/mutations';
 import { useAuthStore } from '@/auth/store';
 import { persistVault } from '@/vault/persist';
+import type { Login, SecureNote } from '@/vault/types';
 
 export type ImportPreview = {
   headers: string[];
   rows: Record<string, string>[];
+  errorCount: number;
   inferredPreset?: string;
   inferredMapping?: Mapping;
 };
@@ -37,25 +39,29 @@ export async function pickCsv(): Promise<{ tmpUri: string; content: string } | n
 
 /** Parse the CSV content and auto-detect a known exporter preset from its header row. */
 export function buildPreview(content: string): ImportPreview {
-  const { headers, rows } = parseCsv(content);
+  const { headers, rows, errorCount } = parseCsv(content);
   const det = detectPreset(headers);
   return {
     headers,
     rows,
+    errorCount,
     ...(det ? { inferredPreset: det.name, inferredMapping: det.mapping } : {}),
   };
 }
 
 /**
- * Map CSV rows into vault entries and append them (never replaces existing
- * entries — `addLogin`/`addNote` prepend). Persists the updated vault, which
- * also enqueues the Drive push (spec §8 step 7).
+ * Append already-parsed vault entries (never replaces existing entries —
+ * `addLogin`/`addNote` prepend). Persists the updated vault, which also
+ * enqueues the Drive push (spec §8 step 7).
+ *
+ * Callers parse rows via `rowsToEntries` themselves (once) and pass the
+ * result here — this function does no parsing of its own so the same parse
+ * output backs both the on-screen preview counts and the actual import.
  */
 export async function executeImport(
-  rows: Record<string, string>[],
-  mapping: Mapping,
+  entries: Array<Login | SecureNote>,
+  skipped: number,
 ): Promise<{ added: number; skipped: number }> {
-  const { rows: entries, skipped } = rowsToEntries(rows, mapping);
   const currentVault = useAuthStore.getState().vault;
   const key = useAuthStore.getState().masterKey;
   if (!currentVault || !key) {

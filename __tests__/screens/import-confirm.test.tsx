@@ -136,4 +136,21 @@ describe('Import Confirm screen', () => {
     // With an empty mapping every row is unmapped, so all rows are skipped.
     expect(screen.getByText('Importar 0 logins, 0 notas seguras, ignorar 2 linhas')).toBeTruthy();
   });
+
+  it('does not show a parse-errors line for a well-formed CSV', async () => {
+    await render(<ConfirmScreen />);
+
+    expect(screen.queryByText(/não puderam ser processadas/)).toBeNull();
+  });
+
+  it('shows a parse-errors line when the CSV has rows with a mismatched field count', async () => {
+    // Header declares 5 fields; the appended row has 7 — papaparse flags
+    // this as a row-level parse error (surfaced via ImportPreview.errorCount).
+    const malformed = `${CSV_CONTENT}\nBroken,https://x.com,carol,secret,notes,extra,field`;
+    setParams({ content: malformed, uri: 'file:///tmp/import.csv', mapping: MAPPING_PARAM });
+
+    await render(<ConfirmScreen />);
+
+    expect(screen.getByText('1 linha(s) não puderam ser processadas e foram ignoradas')).toBeTruthy();
+  });
 });
