@@ -65,4 +65,35 @@ class FallbackNotifierTest {
   fun ensureChannel_doesNotThrow() {
     notifier.ensureChannel()
   }
+
+  // Regression test for the unbounded-growth review finding: shouldNotify's write path must
+  // prune stale "last_*" entries (ones already past RATE_LIMIT_MS, which can never again
+  // suppress a future call) in the same batch as recording the new timestamp.
+  @Test
+  fun shouldNotify_prunesStaleEntriesButKeepsInWindowOnes() {
+    val fallbackPrefs = ctx.getSharedPreferences("vaultsync_fallback", Context.MODE_PRIVATE)
+
+    // Seed a stale entry directly (older than the rate-limit window as of baseNow) and an
+    // in-window one, bypassing shouldNotify so the seeded timestamps are exact.
+    fallbackPrefs.edit()
+      .putLong("last_stale.example", baseNow - FallbackNotifier.RATE_LIMIT_MS - 1L)
+      .putLong("last_fresh.example", baseNow - FallbackNotifier.RATE_LIMIT_MS + 1L)
+      .apply()
+
+    // Recording a new key's timestamp is the write path under test.
+    assertTrue(notifier.shouldNotify("com.example.newapp", now = baseNow))
+
+    assertFalse(
+      "stale entry older than the rate-limit window should have been pruned",
+      fallbackPrefs.contains("last_stale.example"),
+    )
+    assertTrue(
+      "in-window entry must survive pruning",
+      fallbackPrefs.contains("last_fresh.example"),
+    )
+    assertTrue(
+      "the newly recorded key must be present",
+      fallbackPrefs.contains("last_com.example.newapp"),
+    )
+  }
 }

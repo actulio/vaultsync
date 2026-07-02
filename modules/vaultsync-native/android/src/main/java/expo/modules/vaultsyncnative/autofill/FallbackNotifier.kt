@@ -27,16 +27,40 @@ class FallbackNotifier(private val ctx: Context) {
    * "last shown" time for [key]) the first time a key is seen, or once at least [RATE_LIMIT_MS]
    * has elapsed since the last allowed call for that key. Returns `false` — without mutating
    * state — while still inside the rate-limit window.
+   *
+   * Also prunes stale `last_*` entries (see [pruneStaleEntries]) in the same batch as the new
+   * write, so the SharedPreferences file stays bounded instead of accumulating one entry per
+   * app/site ever seen.
    */
   fun shouldNotify(key: String, now: Long): Boolean {
     val prefKey = lastShownPrefKey(key)
     val lastShown = prefs.getLong(prefKey, 0L)
     if (now - lastShown < RATE_LIMIT_MS) return false
-    prefs.edit().putLong(prefKey, now).apply()
+
+    val editor = prefs.edit()
+    pruneStaleEntries(editor, now)
+    editor.putLong(prefKey, now)
+    editor.apply()
     return true
   }
 
-  private fun lastShownPrefKey(key: String) = "last_$key"
+  /**
+   * Queues removal (on [editor], not yet applied) of every `last_*` key whose recorded epoch is
+   * older than the rate-limit window as of [now]. Such an entry is, by definition, already past
+   * [RATE_LIMIT_MS] and can never again suppress a future [shouldNotify] call for its key — so
+   * dropping it is behavior-preserving and simply keeps the map from growing unbounded as more
+   * apps/sites are seen over time.
+   */
+  private fun pruneStaleEntries(editor: SharedPreferences.Editor, now: Long) {
+    val staleBefore = now - RATE_LIMIT_MS
+    for ((storedKey, storedValue) in prefs.all) {
+      if (storedKey.startsWith(LAST_SHOWN_PREFIX) && storedValue is Long && storedValue < staleBefore) {
+        editor.remove(storedKey)
+      }
+    }
+  }
+
+  private fun lastShownPrefKey(key: String) = "$LAST_SHOWN_PREFIX$key"
 
   fun ensureChannel() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -87,5 +111,6 @@ class FallbackNotifier(private val ctx: Context) {
 
   companion object {
     const val RATE_LIMIT_MS = 60 * 60 * 1000L
+    private const val LAST_SHOWN_PREFIX = "last_"
   }
 }
