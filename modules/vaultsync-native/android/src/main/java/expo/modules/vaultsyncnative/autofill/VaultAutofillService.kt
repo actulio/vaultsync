@@ -14,6 +14,7 @@ import android.service.autofill.SaveCallback
 import android.service.autofill.SaveInfo
 import android.service.autofill.SaveRequest
 import android.util.Log
+import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
@@ -58,18 +59,39 @@ class VaultAutofillService : AutofillService() {
     val adapted = detector.adapt(root)
     val detected = detector.walk(adapted) ?: return cb.onSuccess()
 
-    // Task 7 supplies AutofillSaveActivity (class does not exist yet). Bind by its manifest-declared
-    // fully-qualified name so Task 6 compiles standalone; Task 7's class must match this string.
+    // Task 7's AutofillSaveActivity runs standalone (no AssistStructure), so it cannot resolve an
+    // AutofillId back to a value. Extract the just-submitted text values HERE — while we still hold
+    // the structure — and hand them over directly as string extras.
     val intent = Intent().apply {
       setClassName(packageName, "expo.modules.vaultsyncnative.autofill.AutofillSaveActivity")
       putExtra("packageName", structure.activityComponent?.packageName)
       putExtra("webDomain", detector.webDomain(adapted))
-      putExtra("usernameId", detected.usernameId)
-      putExtra("passwordId", detected.passwordId)
+      putExtra("usernameValue", extractValue(structure, detected.usernameId))
+      putExtra("passwordValue", extractValue(structure, detected.passwordId))
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     startActivity(intent)
     cb.onSuccess()
+  }
+
+  /** Finds the submitted text value for [id] anywhere in the filled structure (null if absent). */
+  private fun extractValue(structure: AssistStructure, id: AutofillId?): String? {
+    if (id == null) return null
+    for (w in 0 until structure.windowNodeCount) {
+      findValue(structure.getWindowNodeAt(w).rootViewNode, id)?.let { return it }
+    }
+    return null
+  }
+
+  private fun findValue(node: AssistStructure.ViewNode, id: AutofillId): String? {
+    if (node.autofillId == id) {
+      val v = node.autofillValue
+      if (v != null && v.isText) return v.textValue?.toString()
+    }
+    for (i in 0 until node.childCount) {
+      findValue(node.getChildAt(i), id)?.let { return it }
+    }
+    return null
   }
 
   /** First window's root ViewNode (Android passes one or more windows). */

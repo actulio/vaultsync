@@ -3,4 +3,10 @@
   <string name="autofill_unlock">Unlock VaultSync</string>
   <string name="autofill_unlock_title">Unlock VaultSync</string>
   <string name="autofill_unlock_subtitle">Authenticate to fill credentials</string>
+  <string name="autofill_save_title">Save to VaultSync</string>
+  <string name="autofill_save_message">Save this credential to your vault?</string>
+  <string name="autofill_save_new">Save new</string>
+  <string name="autofill_save_as_new">Save as new</string>
+  <string name="autofill_update_password">Update password</string>
+  <string name="autofill_update_message">Update the password for %1$s?\n\nCurrent: %2$s\nNew: %3$s</string>
 </resources>
