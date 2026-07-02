@@ -1,8 +1,7 @@
-import { registerRootComponent } from 'expo';
-
-import App from './App';
-
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Secure-RNG polyfill MUST load before anything that touches crypto.
+// libsodium-wrappers-sumo (src/crypto/*) and uuid() in src/vault/mutations.ts
+// both require globalThis.crypto.getRandomValues, which Hermes does not provide.
+// Importing this before expo-router/entry guarantees it runs before any route
+// module — and therefore any crypto import — is evaluated.
+import 'react-native-get-random-values';
+import 'expo-router/entry';
