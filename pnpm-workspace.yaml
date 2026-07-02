@@ -1,0 +1,4 @@
+# pnpm 11 build-script approval. react-native-libsodium's postinstall extracts
+# its prebuilt native libsodium (needed for the Android/iOS build; not for Jest).
+allowBuilds:
+  react-native-libsodium: true

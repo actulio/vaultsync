@@ -1,4 +1,4 @@
-import sodium from 'libsodium-wrappers-sumo';
+import sodium from 'react-native-libsodium';
 
 let ready: Promise<void> | null = null;
 const ensureReady = (): Promise<void> => (ready ??= sodium.ready);

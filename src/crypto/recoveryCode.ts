@@ -1,8 +1,5 @@
-import sodium from 'libsodium-wrappers-sumo';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { randomBytes } from './aead';
-
-let ready: Promise<void> | null = null;
-const ensureReady = (): Promise<void> => (ready ??= sodium.ready);
 
 // 15 bytes (120 bits) of entropy → exactly 24 base32 chars → 6 groups of 4
 export const RECOVERY_BYTES = 15;
@@ -55,7 +52,6 @@ function formatGroups(s: string, groupSize = 4): string {
 }
 
 export async function generateRecoveryCode(): Promise<string> {
-  await ensureReady();
   const bytes = await randomBytes(RECOVERY_BYTES);
   const encoded = base32Encode(bytes);
   return formatGroups(encoded, 4);
@@ -76,13 +72,14 @@ function concat(a: Uint8Array, b: Uint8Array): Uint8Array {
   return out;
 }
 
-// Portable HMAC-SHA256 (RFC 2104) built on libsodium's crypto_hash_sha256.
-// libsodium's crypto_auth_hmacsha256 only accepts a fixed 32-byte key, but
-// HKDF needs arbitrary-length keys (the 16-byte salt during extract), so we
-// implement HMAC directly. Pure libsodium → identical on Node and Hermes.
+// Portable HMAC-SHA256 (RFC 2104). libsodium's crypto_auth_hmacsha256 only
+// accepts a fixed 32-byte key, but HKDF needs arbitrary-length keys (the 16-byte
+// salt during extract), so we implement HMAC directly on a raw SHA-256. Uses
+// @noble/hashes (pure JS) → identical bytes on Node and Hermes, and unlike the
+// WASM libsodium build it needs no WebAssembly (unavailable under Hermes).
 function hmacSha256(key: Uint8Array, data: Uint8Array): Uint8Array {
   let k = key;
-  if (k.length > HMAC_BLOCK) k = sodium.crypto_hash_sha256(k);
+  if (k.length > HMAC_BLOCK) k = sha256(k);
   const block = new Uint8Array(HMAC_BLOCK);
   block.set(k);
   const ipad = new Uint8Array(HMAC_BLOCK);
@@ -92,8 +89,8 @@ function hmacSha256(key: Uint8Array, data: Uint8Array): Uint8Array {
     ipad[i] = b ^ 0x36;
     opad[i] = b ^ 0x5c;
   }
-  const inner = sodium.crypto_hash_sha256(concat(ipad, data));
-  return sodium.crypto_hash_sha256(concat(opad, inner));
+  const inner = sha256(concat(ipad, data));
+  return sha256(concat(opad, inner));
 }
 
 function hkdfExtract(salt: Uint8Array, ikm: Uint8Array): Uint8Array {
@@ -118,14 +115,11 @@ function hkdfExpand(prk: Uint8Array, info: Uint8Array, length: number): Uint8Arr
   return out;
 }
 
-export async function deriveRecoveryKey(
-  code: string,
-  salt: Uint8Array,
-  length = 32,
-): Promise<Uint8Array> {
-  await ensureReady();
+// Kept Promise-returning (the derivation itself is now synchronous) so existing
+// `await deriveRecoveryKey(...)` call sites stay valid.
+export function deriveRecoveryKey(code: string, salt: Uint8Array, length = 32): Promise<Uint8Array> {
   if (salt.length !== 16) throw new Error('salt must be 16 bytes');
   const ikm = parseRecoveryCode(code);
   const prk = hkdfExtract(salt, ikm);
-  return hkdfExpand(prk, new TextEncoder().encode(RECOVERY_CODE_INFO), length);
+  return Promise.resolve(hkdfExpand(prk, new TextEncoder().encode(RECOVERY_CODE_INFO), length));
 }
