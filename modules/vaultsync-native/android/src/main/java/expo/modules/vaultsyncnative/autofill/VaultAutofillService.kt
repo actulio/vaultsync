@@ -46,7 +46,9 @@ class VaultAutofillService : AutofillService() {
     val matches = Matcher().match(cache.entries, packageName, webDomain)
     if (matches.isEmpty()) {
       postNoMatchNotification(packageName, webDomain)
-      cb.onSuccess(null)
+      // No dataset to offer, but detected fields exist — return a save-only FillResponse (zero
+      // datasets + SaveInfo) so Android calls onSaveRequest when the user submits new credentials.
+      cb.onSuccess(FillResponse.Builder().setSaveInfo(buildSaveInfo(detected)).build())
       return
     }
     cb.onSuccess(buildFillResponse(detected, matches))
@@ -70,8 +72,13 @@ class VaultAutofillService : AutofillService() {
       putExtra("passwordValue", extractValue(structure, detected.passwordId))
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    startActivity(intent)
-    cb.onSuccess()
+    // Background-activity-launch is blocked on API 29+, so we cannot startActivity() directly here.
+    // Hand an IntentSender to the SaveCallback and let the SYSTEM launch AutofillSaveActivity.
+    val pi = PendingIntent.getActivity(
+      this, 2, intent,
+      PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_CANCEL_CURRENT,
+    )
+    cb.onSuccess(pi.intentSender)
   }
 
   /** Finds the submitted text value for [id] anywhere in the filled structure (null if absent). */
@@ -108,9 +115,23 @@ class VaultAutofillService : AutofillService() {
       setTextViewText(android.R.id.text1, getString(R.string.autofill_unlock))
     }
     val ids = listOfNotNull(detected.usernameId, detected.passwordId).toTypedArray()
+    // Attach SaveInfo alongside the auth gate: onSaveRequest fires only if the session's
+    // FillResponse carried SaveInfo, and the auth-gated path is otherwise a common no-match entry.
     return FillResponse.Builder()
       .setAuthentication(ids, pi.intentSender, rv)
+      .setSaveInfo(buildSaveInfo(detected))
       .build()
+  }
+
+  /**
+   * Builds the SaveInfo that makes Android invoke [onSaveRequest] on submit. Always flags PASSWORD;
+   * ORs in USERNAME when a username field was detected. saveIds spans every detected field.
+   */
+  private fun buildSaveInfo(detected: DetectedFields): SaveInfo {
+    val saveIds = listOfNotNull(detected.usernameId, detected.passwordId).toTypedArray()
+    var type = SaveInfo.SAVE_DATA_TYPE_PASSWORD
+    if (detected.usernameId != null) type = type or SaveInfo.SAVE_DATA_TYPE_USERNAME
+    return SaveInfo.Builder(type, saveIds).build()
   }
 
   private fun buildFillResponse(detected: DetectedFields, matches: List<EntryView>): FillResponse {
@@ -126,8 +147,7 @@ class VaultAutofillService : AutofillService() {
       b.addDataset(ds.build())
     }
     // SaveInfo so Android calls onSaveRequest later when the user submits new/changed credentials.
-    val saveIds = listOfNotNull(detected.usernameId, detected.passwordId).toTypedArray()
-    b.setSaveInfo(SaveInfo.Builder(SaveInfo.SAVE_DATA_TYPE_PASSWORD, saveIds).build())
+    b.setSaveInfo(buildSaveInfo(detected))
     return b.build()
   }
 

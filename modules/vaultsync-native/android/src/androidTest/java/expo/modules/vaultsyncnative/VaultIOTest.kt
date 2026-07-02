@@ -54,6 +54,22 @@ class VaultIOTest {
   }
 
   @Test
+  fun concurrentWritesDoNotCorrupt() {
+    // I4a: with the process-wide write lock + unique tmp names, concurrent writers can never rename
+    // a torn tmp over the target. Each writer uses a homogeneous payload, so a torn/mixed file would
+    // not equal ANY writer's payload. The final file must be exactly one writer's bytes.
+    val payloads = (0 until 8).map { idx -> ByteArray(64 * 1024) { idx.toByte() } }
+    val threads = payloads.map { p -> Thread { repeat(10) { io.writeAtomic(name, p) } } }
+    threads.forEach { it.start() }
+    threads.forEach { it.join() }
+    val read = io.read(name)
+    assertTrue(payloads.any { it.contentEquals(read) })
+    // No tmp residue after concurrent writes.
+    val stale = ctx.filesDir.listFiles { f -> f.name.startsWith("$name.") && f.name.endsWith(".tmp") }
+    assertTrue(stale == null || stale.isEmpty())
+  }
+
+  @Test
   fun readMissingFileThrows() {
     io.delete(name)
     assertThrows(java.io.FileNotFoundException::class.java) { io.read(name) }

@@ -196,6 +196,70 @@ class MatcherTest {
         assertEquals(0, result.size)
     }
 
+    // ── eTLD+1 Multi-Label Public Suffix (I3) ──────────────────────────────
+
+    @Test
+    fun etld1MultiLabelSuffixDoesNotOverMatch() {
+        // nubank.com.br must NOT match evil.com.br (both share the com.br public suffix).
+        val entry = EntryView(
+            id = "nubank",
+            title = "Nubank",
+            username = "user",
+            password = "pass",
+            url = "https://nubank.com.br",
+            packageNames = emptyList(),
+        )
+        val result = matcher.match(listOf(entry), packageName = null, webDomain = "evil.com.br")
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun etld1MultiLabelSuffixCollapsesSubdomain() {
+        // app.nubank.com.br collapses to nubank.com.br and matches the stored nubank.com.br entry.
+        val entry = EntryView(
+            id = "nubank",
+            title = "Nubank",
+            username = "user",
+            password = "pass",
+            url = "https://nubank.com.br/login",
+            packageNames = emptyList(),
+        )
+        val result = matcher.match(listOf(entry), packageName = null, webDomain = "app.nubank.com.br")
+        assertEquals(1, result.size)
+        assertEquals("nubank", result[0].id)
+    }
+
+    @Test
+    fun etld1PlainDomainStillCollapses() {
+        // A plain example.com still collapses to example.com (last-2 default preserved).
+        val entry = EntryView(
+            id = "1",
+            title = "Example",
+            username = "user",
+            password = "pass",
+            url = "https://www.example.com",
+            packageNames = emptyList(),
+        )
+        val result = matcher.match(listOf(entry), packageName = null, webDomain = "example.com")
+        assertEquals(1, result.size)
+        assertEquals("1", result[0].id)
+    }
+
+    @Test
+    fun etld1CoUkDoesNotOverMatch() {
+        // foo.co.uk must NOT match bar.co.uk.
+        val entry = EntryView(
+            id = "foo",
+            title = "Foo",
+            username = "user",
+            password = "pass",
+            url = "https://foo.co.uk",
+            packageNames = emptyList(),
+        )
+        val result = matcher.match(listOf(entry), packageName = null, webDomain = "bar.co.uk")
+        assertEquals(0, result.size)
+    }
+
     // ── Fuzzy Brand-from-Package Fallback ──────────────────────────────────
 
     @Test

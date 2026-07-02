@@ -41,11 +41,27 @@ class Matcher {
     return parts.firstOrNull { it !in skip } ?: ""
   }
 
-  /** eTLD+1 approximation: last two labels. Good enough for v1; full PSL postponed. */
+  /**
+   * eTLD+1 approximation: last two labels by default, but THREE when the last two form a known
+   * multi-label public suffix (e.g. `nubank.com.br` -> `nubank.com.br`, not `com.br`). Prevents
+   * cross-tenant misfires like every `*.com.br` matching every other. Full PSL still postponed.
+   */
   internal fun etld1(host: String): String {
     val hostOnly = host.removePrefix("https://").removePrefix("http://").substringBefore('/').lowercase()
     val labels = hostOnly.split('.').filter { it.isNotEmpty() }
     if (labels.size <= 2) return hostOnly
-    return labels.takeLast(2).joinToString(".")
+    val lastTwo = labels.takeLast(2).joinToString(".")
+    val take = if (lastTwo in MULTI_LABEL_SUFFIXES) 3 else 2
+    if (labels.size <= take) return hostOnly
+    return labels.takeLast(take).joinToString(".")
+  }
+
+  companion object {
+    /** Minimal embedded multi-label public-suffix set (full PSL postponed). */
+    private val MULTI_LABEL_SUFFIXES = setOf(
+      "com.br", "net.br", "org.br", "gov.br", "edu.br",
+      "co.uk", "org.uk", "gov.uk",
+      "com.au", "co.jp", "co.nz",
+    )
   }
 }

@@ -42,7 +42,11 @@ class VaultDecryptor(private val ctx: Context) {
     val vaultBytes = io.read("vault.enc")
     val masterKey = Keystore(alias = "vault_kek", requireUserAuth = true)
       .unwrap(io.read("masterKey.wrapped"))
-    return decryptToView(vaultBytes, masterKey)
+    try {
+      return decryptToView(vaultBytes, masterKey)
+    } finally {
+      masterKey.fill(0) // T4: zero the unwrapped master key after use.
+    }
   }
 
   companion object {

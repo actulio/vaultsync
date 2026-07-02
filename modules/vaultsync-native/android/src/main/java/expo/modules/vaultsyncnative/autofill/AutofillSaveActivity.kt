@@ -180,7 +180,17 @@ class AutofillSaveActivity : FragmentActivity() {
 
   /** After ANY successful write: enqueue a sync push and drop the (now-stale) cache. */
   private fun afterWrite() {
-    SyncQueue.enqueuePush(applicationContext)
-    VaultCacheHolder.instance.invalidate()
+    // The vault write is already durable. A failure here (e.g. SQLITE_BUSY from enqueue) must not
+    // crash the activity — a lost push row is recovered on the next main-app persist.
+    try {
+      SyncQueue.enqueuePush(applicationContext)
+    } catch (e: Exception) {
+      Log.w("VaultSync", "Autofill save: enqueue push failed (recovered on next persist)", e)
+    }
+    try {
+      VaultCacheHolder.instance.invalidate()
+    } catch (e: Exception) {
+      Log.w("VaultSync", "Autofill save: cache invalidate failed", e)
+    }
   }
 }

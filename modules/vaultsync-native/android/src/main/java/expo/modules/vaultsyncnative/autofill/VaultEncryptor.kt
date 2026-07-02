@@ -24,10 +24,18 @@ class VaultEncryptor(private val ctx: Context) {
    */
   fun updateCurrent(modifier: (String) -> String) {
     val io = VaultIO(ctx)
-    val original = io.read("vault.enc")
-    val masterKey = Keystore(alias = "vault_kek", requireUserAuth = true)
-      .unwrap(io.read("masterKey.wrapped"))
-    io.writeAtomic("vault.enc", reencrypt(original, masterKey, modifier))
+    // Hold the process-wide write lock across the FULL read->modify->write so an interleaving JS
+    // persistVault (which also locks in writeAtomic) can't land between our read and our write.
+    synchronized(VaultIO.WRITE_LOCK) {
+      val original = io.read("vault.enc")
+      val masterKey = Keystore(alias = "vault_kek", requireUserAuth = true)
+        .unwrap(io.read("masterKey.wrapped"))
+      try {
+        io.writeAtomic("vault.enc", reencrypt(original, masterKey, modifier))
+      } finally {
+        masterKey.fill(0) // T4: zero the unwrapped master key after use.
+      }
+    }
   }
 
   companion object {
