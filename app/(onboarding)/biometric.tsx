@@ -1,4 +1,4 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
@@ -24,6 +24,9 @@ export default function BiometricEnroll(): JSX.Element {
     await Keystore.generateKeyIfMissing();
     const wrapped = await Keystore.wrap(key);
     await VaultStore.write('masterKey.wrapped', wrapped);
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+    }
     router.push('/(onboarding)/drive-signin');
   };
 

@@ -13,7 +13,6 @@ import android.service.autofill.FillResponse
 import android.service.autofill.SaveCallback
 import android.service.autofill.SaveInfo
 import android.service.autofill.SaveRequest
-import android.util.Log
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.RemoteViews
@@ -22,6 +21,8 @@ import expo.modules.vaultsyncnative.R
 
 @RequiresApi(Build.VERSION_CODES.O)
 class VaultAutofillService : AutofillService() {
+
+  private val notifier by lazy { FallbackNotifier(applicationContext) }
 
   override fun onFillRequest(request: FillRequest, cancel: CancellationSignal, cb: FillCallback) {
     val structure = request.fillContexts.lastOrNull()?.structure ?: return cb.onSuccess(null)
@@ -152,7 +153,6 @@ class VaultAutofillService : AutofillService() {
   }
 
   private fun postNoMatchNotification(packageName: String?, webDomain: String?) {
-    // Plan 6 builds the notification + deep link. Plan 5 leaves a TODO marker via logcat.
-    Log.i("VaultSync", "Autofill miss: pkg=$packageName web=$webDomain")
+    notifier.notifyMiss(packageName, webDomain)
   }
 }

@@ -9,4 +9,8 @@
   <string name="autofill_save_as_new">Salvar como nova</string>
   <string name="autofill_update_password">Atualizar senha</string>
   <string name="autofill_update_message">Atualizar a senha de %1$s?\n\nAtual: %2$s\nNova: %3$s</string>
+  <string name="fallback_channel_name">Preenchimento alternativo</string>
+  <string name="fallback_channel_desc">Exibido quando o preenchimento automático não encontra um campo de login.</string>
+  <string name="fallback_title">VaultSync</string>
+  <string name="fallback_text">Nenhum login salvo para %1$s — toque para buscar no VaultSync</string>
 </resources>
