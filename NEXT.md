@@ -21,7 +21,7 @@ Next up: **Plan 5 — Autofill + save service**
 
 ---
 
-## Plan 5 (Android Autofill) — SHIPPED code-complete on main (2026-07-02, commits 9d1aae8..cf145a2, unpushed)
+## Plan 5 (Android Autofill) — SHIPPED code-complete, pushed to origin/main (2026-07-02, commits 9d1aae8..82aa03d)
 
 > Plan 5 is DONE and merge-ready — see "State today" + the "Release-blockers carried out of Plan 5" section below
 > before shipping. The next work is the I2 keystore fix + device verification, then Plan 6 (fallback import). The
@@ -138,7 +138,7 @@ pnpm android           # run the app (custom dev client, NOT Expo Go)
 - ✅ Google Drive file sync (push/pull): SQLite queue, Drive REST client (refresh + 401 retry), folder/file
      discovery + multipart up/download, orchestrator (cold-path validated pull), foreground hook, settings sync row,
      bootstrap pull-on-launch — Plan 4 complete
-- ✅ Android Autofill + save service — Plan 5 complete (CODE-COMPLETE on main, unpushed): AutofillService
+- ✅ Android Autofill + save service — Plan 5 complete (CODE-COMPLETE, pushed to origin/main): AutofillService
      (fill/save/no-match), FieldDetector, Matcher (eTLD+1 + multi-label PSL + brand fallback), in-service vault
      crypto (BouncyCastle ChaCha20-Poly1305, header-AAD, JS↔Kotlin parity proven), VaultCache TTL, biometric
      unlock activity, save activity (no-silent-overwrite SavePolicy), Kotlin sync_queue enqueue, TS previousPassword
