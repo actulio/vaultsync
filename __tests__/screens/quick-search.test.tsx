@@ -73,6 +73,14 @@ const testVault: VaultV1 = {
       createdAt: '',
       updatedAt: '',
     },
+    {
+      id: '4',
+      type: 'note' as const,
+      title: 'GitHub Backup Codes',
+      body: 'codes',
+      createdAt: '',
+      updatedAt: '',
+    },
   ],
 };
 
@@ -105,6 +113,15 @@ describe('QuickSearch', () => {
 
     expect(await screen.findByText('Example Bank')).toBeTruthy();
     expect(screen.queryByText('GitHub')).toBeNull();
+  });
+
+  it('excludes a SecureNote even when its title textually matches the search term', async () => {
+    setParams({ domain: 'github', package: '' });
+
+    await render(<QuickSearch />);
+
+    expect(await screen.findByText('GitHub')).toBeTruthy();
+    expect(screen.queryByText('GitHub Backup Codes')).toBeNull();
   });
 
   it('renders the empty state when both params are empty', async () => {
@@ -157,6 +174,17 @@ describe('QuickSearch', () => {
 
     await waitFor(() => {
       expect(getRouter().replace).toHaveBeenCalledWith('/unlock');
+    });
+  });
+
+  it('redirects to /(onboarding)/welcome when there is no vault', async () => {
+    setParams({ domain: '', package: '' });
+    useAuthStore.getState().setNoVault();
+
+    await render(<QuickSearch />);
+
+    await waitFor(() => {
+      expect(getRouter().replace).toHaveBeenCalledWith('/(onboarding)/welcome');
     });
   });
 });

@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { pickCsv } from '@/import/csvImporter';
@@ -10,7 +10,13 @@ export default function Pick(): JSX.Element {
   const { colors, spacing, radii, sizes, type } = useTheme();
 
   const onPick = async (): Promise<void> => {
-    const r = await pickCsv();
+    let r: Awaited<ReturnType<typeof pickCsv>>;
+    try {
+      r = await pickCsv();
+    } catch {
+      Alert.alert(t('importError'));
+      return;
+    }
     if (!r) return;
     router.push({ pathname: '/(app)/import/map', params: { uri: r.tmpUri, content: r.content } });
   };

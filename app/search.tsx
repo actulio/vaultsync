@@ -98,7 +98,7 @@ export default function QuickSearch(): JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>
-        {t('list.searchPlaceholder')}: {term}
+        {term === '' ? t('list.searchPlaceholder') : `${t('list.searchPlaceholder')}: ${term}`}
       </Text>
 
       {filtered.length === 0 ? (
