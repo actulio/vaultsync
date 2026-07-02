@@ -21,27 +21,35 @@ Next up: **Plan 5 — Autofill + save service**
 
 ---
 
-## Plan 5 (Android Autofill) — SHIPPED code-complete, pushed to origin/main (2026-07-02, commits 9d1aae8..82aa03d)
+## How to start Plan 6 (Fallback Notification + CSV Import) — canonical kickoff, a fresh session reads this
 
-> Plan 5 is DONE and merge-ready — see "State today" + the "Release-blockers carried out of Plan 5" section below
-> before shipping. The next work is the I2 keystore fix + device verification, then Plan 6 (fallback import). The
-> Plan-5 kickoff/binding context below is retained for reference only — do NOT re-run Plan 5.
+> To begin, tell a fresh session: **"Read vaultsync/NEXT.md and start Plan 6."** The fenced block below is the
+> binding context that instruction resolves to — do not re-derive it. (Plan 5 / Android Autofill SHIPPED
+> 2026-07-02, pushed to origin/main, commits 9d1aae8..82aa03d — see "State today" + "Release-blockers carried
+> out of Plan 5" before any release; the I2 keystore fix + on-device verification are release-gated follow-ups,
+> independent of Plan 6 feature work.)
 
 ```
-Execute Plan 5 from /Users/work/personal/random/docs/superpowers/plans/2026-06-25-plan-5-autofill-save.md
+Execute Plan 6 from /Users/work/personal/random/docs/superpowers/plans/2026-06-25-plan-6-fallback-import.md
 using superpowers:subagent-driven-development. The project already exists at
-/Users/work/personal/random/vaultsync/ (its own git repo, branch `main`). Use context-mode for command
-execution/analysis and the graphify graph (graphify-out/) for codebase context.
+/Users/work/personal/random/vaultsync/ (its own git repo, branch `main`; commit directly per P2-D1). Use
+context-mode for command execution/analysis and the graphify graph (graphify-out/) for codebase context.
+
+Plan 6 scope (spec §6.6 + §8): notification fallback when autofill misses (channel `vault_fallback`,
+"No saved login for <app/site> — tap to search vault", one-per-(package,hour) rate limit, QuickCopyActivity
+deep-link target) + CSV import (1Password/LastPass/Chrome parsers, preview/confirm, append-not-replace,
+each imported entry tagged source:"import-YYYY-MM-DD"). The Plan-5 autofill service currently logs a miss via
+Log.i("VaultSync","Autofill miss…") in VaultAutofillService — Plan 6 replaces that stub with the real notification.
 
 FIRST, read these to orient before dispatching any task:
-- /Users/work/personal/random/vaultsync/.superpowers/sdd/progress.md  (Plan 1-4 ledger: decisions + carried/deferred items)
+- /Users/work/personal/random/vaultsync/.superpowers/sdd/progress.md  (Plan 1-5 ledger: decisions + carried/deferred items + Plan-5 release-blockers)
 - /Users/work/personal/random/vaultsync/NEXT.md  (this file's binding context)
 - /Users/work/personal/random/vaultsync/DESIGN.md  (the visual design system — every screen follows it)
-- the spec: /Users/work/personal/random/docs/superpowers/specs/2026-06-25-password-manager-design.md
+- the spec: /Users/work/personal/random/docs/superpowers/specs/2026-06-25-password-manager-design.md (§6.6, §8)
 
-PRE-FLIGHT: scan Plan 5 for stale assumptions against what Plans 1-4 actually shipped (the plans predate
-the as-built code in places — e.g. plans reference the stale @/crypto/aesGcm not @/crypto/aead, "npm" not
-pnpm, NativeWind/className not src/theme tokens, and "edit initI18n" not the addNamespace extension point).
+PRE-FLIGHT: scan Plan 6 for stale assumptions against what Plans 1-5 actually shipped (the plans predate
+the as-built code — e.g. @/crypto/aesGcm→@/crypto/aead, npm→pnpm, NativeWind/className→src/theme tokens,
+initI18n→registerUiNamespaces addNamespace, and any Tink reference→BouncyCastle for native crypto).
 Batch any conflicts to the user before Task 1.
 
 Binding context from Plans 1-4 (do NOT contradict or re-derive):
@@ -73,12 +81,22 @@ Binding context from Plans 1-4 (do NOT contradict or re-derive):
   persist.ts fires enqueuePush + syncOnce (fire-and-forget, errors surfaced to useSyncStore). Foreground hook in
   app/_layout (3rd useEffect). hasDriveToken() gates sync. Settings has a 'sync' row + screen (sync i18n ns).
 - Native: custom Expo dev client (NOT Expo Go), expo-router file-based nav. Native deps now incl. expo-sqlite +
-  expo-network (autolinked). Adding/altering native Kotlin (modules/vaultsync-native) needs a gradle build +
-  connectedAndroidTest. Avoid `prebuild --clean` (wipes app/android). android/ is gitignored (Expo CNG).
-- Tests: jest-expo + RNTL v14 (async render, findBy*). 185-test baseline (38 suites). Carried cross-cutting act()
-  console warning (React 19/RNTL) — benign.
+  expo-network + BouncyCastle bcprov-jdk18on:1.78.1 (autolinked/declared). Adding/altering native Kotlin
+  (modules/vaultsync-native) needs a gradle build + connectedAndroidTest. Avoid `prebuild --clean` (wipes app/android).
+  android/ is gitignored (Expo CNG).
+- AUTOFILL LAYER (Plan 5, present now): modules/vaultsync-native/android/.../autofill/ = FieldDetector, Matcher
+  (eTLD+1 + multi-label PSL + brand fallback), VaultJson/VaultDecryptor/VaultEncryptor (BouncyCastle ChaCha20-
+  Poly1305-IETF, header-AAD, JS-parity proven), VaultCache (TTL), VaultAutofillService (fill/save/no-match+SaveInfo),
+  AutofillUnlockActivity + AutofillSaveActivity (biometric, no-silent-overwrite SavePolicy), SyncQueue (writes
+  filesDir/SQLite/vaultsync.db, drained by src/sync/queue.ts). TS: src/auth/staleCleanup.ts runs the 7-day
+  previousPassword cleanup on unlock. >> RELEASE-BLOCKER I2: vault_kek is auth-per-use but ALL unlock paths do a
+  bare BiometricPrompt + separate Keystore.unwrap (NO CryptoObject) → throws on API-30+ devices; do NOT build
+  Plan-6 features that assume biometric unwrap succeeds on-device until I2 is fixed.
+- Tests: jest-expo + RNTL v14 (async render, findBy*). 188-test JS baseline (39 suites). Native: connectedAndroidTest
+  89-test baseline on emulator vaultsync_test (Android 14). Carried cross-cutting act() console warning (React 19/RNTL) — benign.
 
-ACCEPTED FOLLOW-UPS carried into Plan 5 (none merge-blocking — fold in when relevant code lands):
+ACCEPTED FOLLOW-UPS carried into Plan 6 (none merge-blocking — fold in when relevant code lands; the full
+Plan-5 release-blocker + device-checklist list is in the "Release-blockers carried out of Plan 5" section below):
 - SYNC (Plan 4): true updatedAt-based last-write-wins + in-session live vault reload are DEFERRED-BY-DESIGN
   (P4-D1). Until they land, concurrent multi-device edits resolve only via cold-path pull-on-launch, and an
   unlocked device ignores newer remote for the session. drive_last_upload_iso is now written after a push (clean-LWW prerequisite).
@@ -89,8 +107,9 @@ ACCEPTED FOLLOW-UPS carried into Plan 5 (none merge-blocking — fold in when re
   store.test.ts over-built; layout test doesn't assert startSyncOnForeground wiring; no instrumented empty-clip test.
 - SYNC UX (Minor): show a distinct "never synced" label when status==='idle' && lastSyncedAt===null
   (currently renders "Synced" before the first sync).
-- Spec §3.1 (dormant, Plan 3): EntryForm never writes `previousPassword` on password change;
-  clearStalePreviousPasswords has no caller (7-day previous-password retention unimplemented).
+- Spec §3.1 (Plan 5 CLOSED the retention gap): the Kotlin autofill save writes `previousPassword`+`updatedAt`, and
+  src/auth/staleCleanup.ts clears entries older than 7 days on unlock. STILL OPEN: the in-app EntryForm
+  password-change path doesn't write `previousPassword` (only the autofill save does).
 - Mem hygiene §4.7 (Plan 3): changeMasterPassword doesn't zero old masterKey / re-derived candidate buffers on rotation.
 - Cosmetic (Plan 3): entry/edit/[id].tsx dead ternary; onGenerate console.error not user-facing; filter pills lack
   distinct a11y label; cancelPendingClear has no caller (foreground-cancel not wired).
