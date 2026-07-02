@@ -68,4 +68,29 @@ class Keystore(
     cipher.init(Cipher.DECRYPT_MODE, getSecretKey(), GCMParameterSpec(128, nonce))
     return cipher.doFinal(combined)
   }
+
+  // --- Auth-gated path -------------------------------------------------------
+  // For an auth-per-use key, the crypto op must be authorized by a fresh
+  // biometric auth bound via BiometricPrompt.CryptoObject. Cipher.init() does
+  // NOT trigger auth; only doFinal() does — and that runs after the prompt
+  // succeeds. The caller (VaultsyncNativeModule) obtains an initialized Cipher
+  // here, hands it to BiometricPrompt, and finishes the op on the authorized
+  // Cipher returned in the auth result. The wrapped-blob format is identical to
+  // wrap()/unwrap(): nonce(12) || ciphertext(N) || tag(16).
+
+  /** Cipher initialized for encryption (fresh Keystore-generated IV). */
+  fun newEncryptCipher(): Cipher =
+    Cipher.getInstance("AES/GCM/NoPadding").apply {
+      init(Cipher.ENCRYPT_MODE, getSecretKey())
+    }
+
+  /** Cipher initialized for decryption with the given 12-byte GCM nonce. */
+  fun newDecryptCipher(nonce: ByteArray): Cipher =
+    Cipher.getInstance("AES/GCM/NoPadding").apply {
+      init(Cipher.DECRYPT_MODE, getSecretKey(), GCMParameterSpec(128, nonce))
+    }
+
+  /** Finish a wrap on an authorized encrypt Cipher: nonce(12) || ct || tag(16). */
+  fun finishWrap(cipher: Cipher, plaintext: ByteArray): ByteArray =
+    cipher.iv + cipher.doFinal(plaintext)
 }
