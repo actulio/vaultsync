@@ -21,10 +21,11 @@ Next up: **Plan 5 — Autofill + save service**
 
 ---
 
-## How to start Plan 5 (canonical kickoff — a fresh session reads this)
+## Plan 5 (Android Autofill) — SHIPPED code-complete on main (2026-07-02, commits 9d1aae8..cf145a2, unpushed)
 
-> To begin, just tell a fresh session: **"Read vaultsync/NEXT.md and start Plan 5."** Everything below is
-> the binding context that instruction resolves to — do not re-derive it.
+> Plan 5 is DONE and merge-ready — see "State today" + the "Release-blockers carried out of Plan 5" section below
+> before shipping. The next work is the I2 keystore fix + device verification, then Plan 6 (fallback import). The
+> Plan-5 kickoff/binding context below is retained for reference only — do NOT re-run Plan 5.
 
 ```
 Execute Plan 5 from /Users/work/personal/random/docs/superpowers/plans/2026-06-25-plan-5-autofill-save.md
@@ -111,7 +112,7 @@ cd /Users/work/personal/random/vaultsync
 
 # JS / logic
 pnpm install
-pnpm test              # 185 tests (crypto, vault, auth, generator, settings, drive, sync, screens)
+pnpm test              # 188 tests (crypto, vault, auth, generator, settings, drive, sync, screens, staleCleanup)
 pnpm run typecheck
 pnpm run lint          # MUST be 0 — run every task
 
@@ -122,7 +123,7 @@ export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
 emulator -avd vaultsync_test -no-window -no-audio &
 adb wait-for-device
 cd android && ./gradlew :app:assembleDebug                       # app build (autolinks expo-sqlite/expo-network)
-cd android && ./gradlew :vaultsync-native:connectedAndroidTest   # 9 native tests (after native changes)
+cd android && ./gradlew :vaultsync-native:connectedAndroidTest   # 89 native tests (autofill: detector/matcher/crypto/cache/IO; after native changes)
 pnpm android           # run the app (custom dev client, NOT Expo Go)
 ```
 
@@ -137,5 +138,28 @@ pnpm android           # run the app (custom dev client, NOT Expo Go)
 - ✅ Google Drive file sync (push/pull): SQLite queue, Drive REST client (refresh + 401 retry), folder/file
      discovery + multipart up/download, orchestrator (cold-path validated pull), foreground hook, settings sync row,
      bootstrap pull-on-launch — Plan 4 complete
-- ⬜ Autofill + save service — Plan 5 (NEXT)
-- ⬜ Fallback import — Plan 6
+- ✅ Android Autofill + save service — Plan 5 complete (CODE-COMPLETE on main, unpushed): AutofillService
+     (fill/save/no-match), FieldDetector, Matcher (eTLD+1 + multi-label PSL + brand fallback), in-service vault
+     crypto (BouncyCastle ChaCha20-Poly1305, header-AAD, JS↔Kotlin parity proven), VaultCache TTL, biometric
+     unlock activity, save activity (no-silent-overwrite SavePolicy), Kotlin sync_queue enqueue, TS previousPassword
+     7-day cleanup on unlock. Gates: assembleDebug OK, connectedAndroidTest 89/89, pnpm test 188/188, typecheck 0, lint 0.
+- ⬜ Fallback import — Plan 6 (+ spec §6.6 notification-fallback, currently a logcat stub)
+
+## ⚠️ Release-blockers carried out of Plan 5 (code-complete ≠ ship-ready)
+- **I2 — keystore CryptoObject (TOP ship-blocker, NEEDS USER SIGN-OFF).** `vault_kek` is auth-per-use
+  (`setUserAuthenticationParameters(0, BIOMETRIC_STRONG)`) but production unlock AND both autofill activities do a
+  bare `BiometricPrompt` + a *separate* `Keystore.unwrap` with NO `CryptoObject`. On real API-30+ devices `unwrap`
+  throws `UserNotAuthenticatedException`, so the ENTIRE biometric surface (incl. the shipped main-app unlock) is dead
+  on first device run; the warm-cache autofill save does no prompt at all before unwrap. Pre-existing since Plan 2,
+  unverifiable on the emulator, and the fix (additive Keystore method exposing an init-ed Cipher for
+  `BiometricPrompt(CryptoObject(cipher))`) makes the warm-cache save require a biometric tap — a UX change to confirm.
+- **Pre-ship device checklist (needs a physical device w/ enrolled biometrics):** (1) biometric unlock e2e after the
+  I2 fix; (2) real third-party-app fill (dataset popup, unlock-then-fill, TTL expiry); (3) save flow e2e — new /
+  update-password / save-as-new, PT strings; (4) autofill save → sync_queue row → JS foreground drain → Drive push →
+  re-decode round-trip; (5) Plan-4 multipart Blob upload smoke; (6) autofill settings-gear entry point.
+- **LWW / in-session live-reload = the next planned phase (P4-D1/P5-D2 deferred-by-design).** Until it lands, an
+  autofill save while the main app stays unlocked is reverted by any later in-session persist (bounded by 5-min
+  auto-lock; unlock re-reads disk). Interim hardening idea: `persistVault` compares on-disk `updatedAt` vs its load
+  baseline and reloads/merges on mismatch.
+- Minor (backlog): `autofill_service.xml` settingsActivity points at a non-exported activity; demote the miss-log
+  `Log.i` (records visited package/domain) to `Log.d` before ship; spec §6.5 "don't ask for this app again" blocklist.
