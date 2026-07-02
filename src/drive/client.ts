@@ -6,7 +6,7 @@ const REFRESH = 'drive_refresh_token';
 
 async function refresh(): Promise<string> {
   const refreshToken = await SecureStore.getItemAsync(REFRESH);
-  const clientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID as string | undefined;
+  const clientId = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
   if (!refreshToken || !clientId) throw new Error('no refresh token');
   const body = new URLSearchParams({
     client_id: clientId,

@@ -1,10 +1,15 @@
 import type { JSX } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme';
 
-type Row = { label: string; path: string };
+// `path` is typed against the expo-router typed-route table (via .expo/types)
+// instead of a bare `string`, so the literals below stay validated against the
+// actual route list. Restricted to the string half of `Href` (excluding the
+// `{ pathname, params }` object form) so it also works as a React list `key`.
+type RoutePath = Extract<Href, string>;
+type Row = { label: string; path: RoutePath };
 
 export default function SettingsScreen(): JSX.Element {
   const { t } = useTranslation('settings');
