@@ -4,6 +4,7 @@
   "main": "index.ts",
   "packageManager": "pnpm@11.1.1",
   "dependencies": {
+    "@noble/ciphers": "^2.2.0",
     "@noble/hashes": "^2.2.0",
     "@react-native-community/slider": "5.2.0",
     "expo": "~56.0.12",
