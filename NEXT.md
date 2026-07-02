@@ -16,15 +16,40 @@ Critical; data-safety core (cold-path pull, validate-before-overwrite, no-clobbe
 queue) verified sound; the 1 Important (enqueueSync swallowing enqueuePush rejection) + 3 same-file Minors
 were FIXED and re-reviewed clean (commit `9bef00c`).
 
-Next up: **Plan 5 — Autofill + save service**
-(`docs/superpowers/plans/2026-06-25-plan-5-autofill-save.md`). Plan 6 (fallback import) follows.
+**Plan 5 (Android Autofill + save service)** shipped 2026-07-02 (origin/main `986c9e9..b7392bf`), and
+**Plan 6 (Notification fallback + CSV import)** is now **CODE-COMPLETE & MERGE-READY on local `main`**
+(HEAD `db2e212`, commits `bba85f4..db2e212`, **not yet pushed**). This **completes the six-plan VaultSync v1 series.**
+
+## Plan 6 — DONE (2026-07-02, local main, unpushed)
+
+Autofill misses now post a rate-limited (once/(package|domain)/hour) notification on channel `vault_fallback`
+("No saved login for … — tap to search vault") whose tap deep-links `vaultsync://search?domain=&package=` into a
+quick-copy screen (`app/search.tsx`, copy-and-clear). CSV import (Settings → Import CSV) auto-detects
+1Password/LastPass/Bitwarden/Chrome, offers manual column mapping, previews logins/notes/skipped, **appends** (never
+replaces) with each entry tagged `source:"import-YYYY-MM-DD"`, then auto-deletes the plaintext temp CSV and reminds
+the user to delete the original. Plus `docs/manual-test-matrix.md` (21 on-device scenarios).
+
+Gates at close (`db2e212`, controller-verified via ctx_execute): `pnpm test` **212/212** (44 suites),
+`pnpm run typecheck` **0**, `pnpm run lint` **0**, `:app:assembleDebug` SUCCESSFUL, `:vaultsync-native:connectedAndroidTest`
+**94/94** (Android-14 emulator). Executed via subagent-driven-development (5 tasks, per-task spec+quality review each).
+Final whole-branch review (opus): "merge WITH FIXES" — no Critical; verified I5 not reintroduced, append-not-replace,
+Drive enqueue, deep-link/i18n integration all sound. **2 Important FIXED** (`db2e212`): (I1) plaintext temp CSV survived
+cancel/back/error paths + silent locked-vault-import failure → now deleted right after read on every path + import-error
+alert; (I2) autofill miss-notify could throw and skip `cb.onSuccess` → wrapped in try/catch. Deferred Minors (backlog,
+non-blocking): Chrome-vs-LastPass detect label; no Secure-Note import in UI (by-design v1); `parseCsv` drops papaparse
+errors; CSV plaintext through nav params; Fallback `SharedPreferences` timestamps unpruned; `key.hashCode()` id collision;
+`rowsToEntries` computed twice on confirm. (Full ledger: `.superpowers/sdd/progress.md`.)
+
+**Before RELEASE (not merge — carried from Plan 5, unchanged by Plan 6):** the I2 keystore CryptoObject ship-blocker
+(TOP, needs USER UX sign-off + a physical device), the pre-ship device checklist, and the LWW/in-session live-reload
+phase all still stand. See "Release-blockers carried out of Plan 5" below.
 
 ---
 
-## How to start Plan 6 (Fallback Notification + CSV Import) — canonical kickoff, a fresh session reads this
+## How Plan 6 was executed (HISTORICAL — Plan 6 is DONE; kept for provenance)
 
-> To begin, tell a fresh session: **"Read vaultsync/NEXT.md and start Plan 6."** The fenced block below is the
-> binding context that instruction resolves to — do not re-derive it. (Plan 5 / Android Autofill SHIPPED
+> Plan 6 is complete (see above). This block was the kickoff a fresh session resolved when told
+> **"Read vaultsync/NEXT.md and start Plan 6."** — retained for reference only. (Plan 5 / Android Autofill SHIPPED
 > 2026-07-02, pushed to origin/main, commits 9d1aae8..82aa03d — see "State today" + "Release-blockers carried
 > out of Plan 5" before any release; the I2 keystore fix + on-device verification are release-gated follow-ups,
 > independent of Plan 6 feature work.)
