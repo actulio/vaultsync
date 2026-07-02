@@ -24,6 +24,9 @@ export default function AppLayout(): JSX.Element {
       <Stack.Screen name="settings/auto-lock" />
       <Stack.Screen name="settings/change-password" />
       <Stack.Screen name="settings/sync" />
+      <Stack.Screen name="import/pick" />
+      <Stack.Screen name="import/map" />
+      <Stack.Screen name="import/confirm" />
     </Stack>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "title": "Import CSV",
+  "pick": "Pick CSV file",
+  "detected": "Detected format: {{name}}",
+  "mapColumns": "Map columns",
+  "fields": {
+    "title": "Title",
+    "url": "URL",
+    "username": "Username",
+    "password": "Password",
+    "notes": "Notes"
+  },
+  "next": "Next",
+  "preview": "Import {{logins}} logins, {{notes}} secure notes, skip {{skipped}} rows",
+  "confirm": "Import",
+  "deleteReminder": "Reminder: delete the CSV from Downloads — it contains your passwords in plain text."
+}

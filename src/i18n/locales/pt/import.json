@@ -1,0 +1,17 @@
+{
+  "title": "Importar CSV",
+  "pick": "Selecionar arquivo CSV",
+  "detected": "Formato detectado: {{name}}",
+  "mapColumns": "Mapear colunas",
+  "fields": {
+    "title": "Título",
+    "url": "URL",
+    "username": "Usuário",
+    "password": "Senha",
+    "notes": "Notas"
+  },
+  "next": "Avançar",
+  "preview": "Importar {{logins}} logins, {{notes}} notas seguras, ignorar {{skipped}} linhas",
+  "confirm": "Importar",
+  "deleteReminder": "Lembrete: apague o CSV de Downloads — ele contém suas senhas em texto puro."
+}

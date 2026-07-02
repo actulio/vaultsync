@@ -20,6 +20,7 @@ export default function SettingsScreen(): JSX.Element {
     { label: t('rows.autoLock'), path: '/(app)/settings/auto-lock' },
     { label: t('rows.changePassword'), path: '/(app)/settings/change-password' },
     { label: t('rows.sync'), path: '/(app)/settings/sync' },
+    { label: t('rows.import'), path: '/(app)/import/pick' },
   ];
 
   const styles = StyleSheet.create({

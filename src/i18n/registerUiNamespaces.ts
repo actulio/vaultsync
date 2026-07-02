@@ -14,6 +14,8 @@ import ptSettings from './locales/pt/settings.json';
 import enSettings from './locales/en/settings.json';
 import ptSync from './locales/pt/sync.json';
 import enSync from './locales/en/sync.json';
+import ptImport from './locales/pt/import.json';
+import enImport from './locales/en/import.json';
 
 export function registerUiNamespaces(): void {
   addNamespace('pt', 'onboarding', ptOnboarding);
@@ -26,4 +28,6 @@ export function registerUiNamespaces(): void {
   addNamespace('en', 'settings', enSettings);
   addNamespace('pt', 'sync', ptSync);
   addNamespace('en', 'sync', enSync);
+  addNamespace('pt', 'import', ptImport);
+  addNamespace('en', 'import', enImport);
 }

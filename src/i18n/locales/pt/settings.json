@@ -3,7 +3,8 @@
     "language": "Idioma",
     "autoLock": "Bloqueio automático",
     "changePassword": "Alterar senha mestre",
-    "sync": "Sincronização Google Drive"
+    "sync": "Sincronização Google Drive",
+    "import": "Importar CSV"
   },
   "language": {
     "title": "Idioma",
