@@ -1,5 +1,7 @@
 import type { Entry, Login, SecureNote, VaultV1 } from '@/vault/types';
 
+type LoginFormData = Omit<Login, 'id' | 'type' | 'createdAt' | 'updatedAt'>;
+
 const now = (): string => new Date().toISOString();
 
 function uuid(): string {
@@ -25,6 +27,22 @@ export function updateEntry(vault: VaultV1, id: string, patch: Partial<Entry>): 
     e.id === id ? ({ ...e, ...patch, updatedAt: now() } as Entry) : e,
   );
   return { ...vault, entries, updatedAt: now() };
+}
+
+/**
+ * Mirrors the Kotlin autofill-save retention semantics (AutofillSaveActivity.updatePassword):
+ * when a login's password actually changes to a new non-empty value, stash the old password
+ * in `previousPassword` so `clearStalePreviousPasswords` can expire it after 7 days. A no-op
+ * for notes, unchanged passwords, and empty incoming passwords.
+ */
+export function withPreviousPassword(
+  current: Entry,
+  data: LoginFormData,
+): LoginFormData & { previousPassword?: string } {
+  if (current.type === 'login' && data.password !== '' && data.password !== current.password) {
+    return { ...data, previousPassword: current.password };
+  }
+  return data;
 }
 
 export function deleteEntry(vault: VaultV1, id: string): VaultV1 {

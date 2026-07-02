@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
-import { updateEntry } from '@/vault/mutations';
+import { updateEntry, withPreviousPassword } from '@/vault/mutations';
 import { persistVault } from '@/vault/persist';
 import { EntryForm } from '@/vault/EntryForm';
 import type { EntryFormResult } from '@/vault/EntryForm';
@@ -41,7 +41,7 @@ export default function EditEntry(): JSX.Element {
     if (!currentVault || !key) return;
     const next =
       r.type === 'login'
-        ? updateEntry(currentVault, entry.id, r.data)
+        ? updateEntry(currentVault, entry.id, withPreviousPassword(entry, r.data))
         : updateEntry(currentVault, entry.id, r.data);
     useAuthStore.getState().updateVault(next);
     await persistVault(next, key);

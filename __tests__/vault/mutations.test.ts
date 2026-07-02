@@ -1,5 +1,12 @@
-import { addLogin, updateEntry, deleteEntry, clearStalePreviousPasswords, addNote } from '@/vault/mutations';
-import type { Login, VaultV1 } from '@/vault/types';
+import {
+  addLogin,
+  updateEntry,
+  deleteEntry,
+  clearStalePreviousPasswords,
+  addNote,
+  withPreviousPassword,
+} from '@/vault/mutations';
+import type { Login, SecureNote, VaultV1 } from '@/vault/types';
 
 const empty = (): VaultV1 => ({ version: 1, entries: [], updatedAt: '', deviceId: 'd' });
 
@@ -39,5 +46,47 @@ describe('vault mutations', () => {
     };
     const out = clearStalePreviousPasswords(v);
     expect((out.entries[0] as Login).previousPassword).toBeUndefined();
+  });
+});
+
+describe('withPreviousPassword', () => {
+  const login: Login = {
+    id: '1',
+    type: 'login',
+    title: 'GH',
+    username: 'me',
+    password: 'old-pass',
+    createdAt: '',
+    updatedAt: '',
+  };
+
+  const note: SecureNote = {
+    id: '2',
+    type: 'note',
+    title: 'WiFi',
+    body: 'pass',
+    createdAt: '',
+    updatedAt: '',
+  };
+
+  it('sets previousPassword to the old password when a login password changes', () => {
+    const patch = withPreviousPassword(login, { title: 'GH', username: 'me', password: 'new-pass' });
+    expect(patch.previousPassword).toBe('old-pass');
+    expect(patch.password).toBe('new-pass');
+  });
+
+  it('does not set previousPassword when the password is unchanged', () => {
+    const patch = withPreviousPassword(login, { title: 'GH', username: 'me', password: 'old-pass' });
+    expect(patch.previousPassword).toBeUndefined();
+  });
+
+  it('does not set previousPassword when the new password is empty', () => {
+    const patch = withPreviousPassword(login, { title: 'GH', username: 'me', password: '' });
+    expect(patch.previousPassword).toBeUndefined();
+  });
+
+  it('is a no-op for notes', () => {
+    const patch = withPreviousPassword(note, { title: 'GH', username: 'me', password: 'new-pass' });
+    expect(patch.previousPassword).toBeUndefined();
   });
 });
