@@ -22,37 +22,46 @@ import { useSyncStore } from '@/sync/store';
  * AEAD associated-data so this write round-trips with `unlock.ts`'s read path.
  */
 export async function persistVault(vault: VaultV1, masterKey: Uint8Array): Promise<void> {
-  // 1. Read the current header to preserve it (password unchanged).
-  const old = decodeVaultFile(await VaultStore.read('vault.enc'));
+  // I5: the caller passes the store's LIVE key; auto-lock (`store.lock()`) zeroes it in place at an
+  // await point. Copy it BEFORE the first await — JS is single-threaded, so lock() cannot run before
+  // then — and encrypt under the copy, zeroing the copy in `finally`. This makes the write atomic
+  // w.r.t. lock(): we never encrypt under a half-zeroed key.
+  const key = masterKey.slice();
+  try {
+    // 1. Read the current header to preserve it (password unchanged).
+    const old = decodeVaultFile(await VaultStore.read('vault.enc'));
 
-  // 2. Fresh payload nonce for this write.
-  const vaultNonce = await randomBytes(12);
+    // 2. Fresh payload nonce for this write.
+    const vaultNonce = await randomBytes(12);
 
-  // 3. Build header fields preserving on-disk secrets; only the nonce changes.
-  const headerFields: VaultHeaderFields = {
-    version: 1,
-    salt: old.salt,
-    argon2: old.argon2,
-    hint: old.hint,
-    recoveryWrappedKey: old.recoveryWrappedKey,
-    vaultNonce,
-  };
-  const aad = serializeVaultHeader(headerFields);
+    // 3. Build header fields preserving on-disk secrets; only the nonce changes.
+    const headerFields: VaultHeaderFields = {
+      version: 1,
+      salt: old.salt,
+      argon2: old.argon2,
+      hint: old.hint,
+      recoveryWrappedKey: old.recoveryWrappedKey,
+      vaultNonce,
+    };
+    const aad = serializeVaultHeader(headerFields);
 
-  // 4. Encrypt the vault payload with the new header as AAD.
-  const plaintext = new TextEncoder().encode(JSON.stringify(vault));
-  const enc = await aeadEncrypt(plaintext, masterKey, vaultNonce, aad);
+    // 4. Encrypt the vault payload with the new header as AAD.
+    const plaintext = new TextEncoder().encode(JSON.stringify(vault));
+    const enc = await aeadEncrypt(plaintext, key, vaultNonce, aad);
 
-  // 5. Encode + atomically write.
-  const fields: VaultFileFields = {
-    ...headerFields,
-    vaultCiphertext: enc.ciphertext,
-    vaultTag: enc.tag,
-  };
-  await VaultStore.write('vault.enc', encodeVaultFile(fields));
+    // 5. Encode + atomically write.
+    const fields: VaultFileFields = {
+      ...headerFields,
+      vaultCiphertext: enc.ciphertext,
+      vaultTag: enc.tag,
+    };
+    await VaultStore.write('vault.enc', encodeVaultFile(fields));
 
-  // 6. Hand off to the sync queue (Plan 4 wires the Drive push).
-  enqueueSync();
+    // 6. Hand off to the sync queue (Plan 4 wires the Drive push).
+    enqueueSync();
+  } finally {
+    key.fill(0);
+  }
 }
 
 /** Fire-and-forget: enqueue a push then kick off a sync cycle.

@@ -20,7 +20,13 @@ export async function runStaleCleanup(): Promise<void> {
   if (!hasStaleChanges(vault, cleaned)) return;
 
   useAuthStore.getState().updateVault(cleaned);
-  await persistVault(cleaned, masterKey);
+  // T8: never let a persistVault rejection escape as an unhandled promise rejection (the call site
+  // voids this). Cleanup is self-healing — it re-runs on the next unlock — so log and move on.
+  try {
+    await persistVault(cleaned, masterKey);
+  } catch (e) {
+    console.warn('runStaleCleanup: persist failed (retried on next unlock)', e);
+  }
 }
 
 /**
