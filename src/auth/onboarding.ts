@@ -3,7 +3,7 @@ import { deriveMasterKey, DEFAULT_ARGON2 } from '@/crypto/argon2';
 import { generateRecoveryCode, deriveRecoveryKey } from '@/crypto/recoveryCode';
 import { encodeVaultFile, serializeVaultHeader, type VaultFileFields } from '@/vault/format';
 import type { VaultV1 } from '@/vault/types';
-import { Keystore, VaultStore } from '@/native/keystore';
+import { VaultStore } from '@/native/keystore';
 
 export type CreateVaultArgs = { password: string; hint: string };
 export type CreateVaultResult = { recoveryCode: string; masterKey: Uint8Array; vault: VaultV1 };
@@ -63,9 +63,10 @@ export async function _internalAssemble(args: CreateVaultArgs): Promise<{
 export async function createVault(args: CreateVaultArgs): Promise<CreateVaultResult> {
   const { recoveryCode, masterKey, vault, vaultBytes } = await _internalAssemble(args);
   await VaultStore.write('vault.enc', vaultBytes);
-  await Keystore.generateKeyIfMissing();
-  const wrapped = await Keystore.wrap(masterKey);
-  await VaultStore.write('masterKey.wrapped', wrapped);
+  // Biometric unlock is opt-in: the master key is wrapped into the Keystore only
+  // when the user explicitly enables it (onboarding biometric screen or Settings)
+  // via enableBiometric(). Vault creation never touches the Keystore, so a
+  // password-only user is never prompted for biometrics.
   return { recoveryCode, masterKey, vault };
 }
 

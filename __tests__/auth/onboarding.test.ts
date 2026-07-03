@@ -102,7 +102,7 @@ describe('createVault', () => {
     ).rejects.toThrow();
   });
 
-  it('createVault writes vault.enc and masterKey.wrapped to VaultStore', async () => {
+  it('createVault writes only vault.enc and never touches the Keystore (biometric is opt-in)', async () => {
     const mocked = jest.requireMock('@/native/keystore');
     const VaultStore = mocked.VaultStore as { write: jest.Mock };
     const Keystore = mocked.Keystore as {
@@ -116,9 +116,12 @@ describe('createVault', () => {
     const result = await createVault({ password: 'valid-pw!', hint: 'hint' });
     expect(result.recoveryCode).toBeTruthy();
     expect(result.vault.version).toBe(1);
+    // Vault creation writes the encrypted vault...
     expect(VaultStore.write).toHaveBeenCalledWith('vault.enc', expect.any(Uint8Array));
-    expect(Keystore.generateKeyIfMissing).toHaveBeenCalled();
-    expect(Keystore.wrap).toHaveBeenCalledWith(expect.any(Uint8Array));
-    expect(VaultStore.write).toHaveBeenCalledWith('masterKey.wrapped', expect.any(Uint8Array));
+    // ...but must NOT wrap the master key into the Keystore. Biometric unlock is
+    // enabled later, explicitly, via enableBiometric().
+    expect(Keystore.generateKeyIfMissing).not.toHaveBeenCalled();
+    expect(Keystore.wrap).not.toHaveBeenCalled();
+    expect(VaultStore.write).not.toHaveBeenCalledWith('masterKey.wrapped', expect.anything());
   });
 });

@@ -8,7 +8,8 @@ import {
   type VaultFileFields,
 } from '@/vault/format';
 import type { VaultV1 } from '@/vault/types';
-import { Keystore, VaultStore } from '@/native/keystore';
+import { VaultStore } from '@/native/keystore';
+import { enableBiometric, isBiometricEnabled } from '@/auth/biometric';
 
 /**
  * Rotate the master password on an already-unlocked vault.
@@ -26,6 +27,11 @@ export async function changeMasterPassword(
 ): Promise<{ newRecoveryCode: string; newMasterKey: Uint8Array }> {
   // Step 1: Validate new password length.
   if (newPassword.length < 8) throw new Error('new password too short');
+
+  // Capture the biometric opt-in state up front (before any rewrites) so we can
+  // preserve it across the rotation without silently enabling it for a
+  // password-only user.
+  const wasBiometricEnabled = await isBiometricEnabled();
 
   // Step 2: Load and parse the existing vault.
   const oldBytes = await VaultStore.read('vault.enc');
@@ -77,9 +83,14 @@ export async function changeMasterPassword(
   };
   await VaultStore.write('vault.enc', encodeVaultFile(newFields));
 
-  // Step 8: Re-wrap the new master key in the Keystore.
-  await Keystore.generateKeyIfMissing();
-  await VaultStore.write('masterKey.wrapped', await Keystore.wrap(newMasterKey));
+  // Step 8: Preserve biometric opt-in. Only re-wrap the new master key under the
+  // Keystore if biometric unlock was already enabled (the old wrapped copy holds
+  // the OLD key and is now stale). A password-only user is neither enrolled nor
+  // prompted. Re-wrapping shows a biometric prompt; if it fails the rotation has
+  // already persisted (password unlock works) — surface it to the caller.
+  if (wasBiometricEnabled) {
+    await enableBiometric(newMasterKey);
+  }
 
   return { newRecoveryCode, newMasterKey };
 }

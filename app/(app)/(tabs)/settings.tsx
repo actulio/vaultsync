@@ -18,6 +18,7 @@ export default function SettingsScreen(): JSX.Element {
   const rows: Row[] = [
     { label: t('rows.language'), path: '/(app)/settings/language' },
     { label: t('rows.autoLock'), path: '/(app)/settings/auto-lock' },
+    { label: t('rows.biometric'), path: '/(app)/settings/biometric' },
     { label: t('rows.changePassword'), path: '/(app)/settings/change-password' },
     { label: t('rows.sync'), path: '/(app)/settings/sync' },
     { label: t('rows.import'), path: '/(app)/import/pick' },

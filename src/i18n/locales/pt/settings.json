@@ -2,9 +2,20 @@
   "rows": {
     "language": "Idioma",
     "autoLock": "Bloqueio automático",
+    "biometric": "Desbloqueio por biometria",
     "changePassword": "Alterar senha mestre",
     "sync": "Sincronização Google Drive",
     "import": "Importar CSV"
+  },
+  "biometric": {
+    "title": "Desbloqueio por biometria",
+    "body": "Quando ativado, você pode desbloquear o vaultsync com a digital ou o rosto. Sua senha mestre sempre continua funcionando.",
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "enable": "Ativar biometria",
+    "disable": "Desativar biometria",
+    "locked": "Desbloqueie o vaultsync primeiro.",
+    "unavailable": "Biometria indisponível neste dispositivo."
   },
   "language": {
     "title": "Idioma",

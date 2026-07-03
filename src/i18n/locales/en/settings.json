@@ -2,9 +2,20 @@
   "rows": {
     "language": "Language",
     "autoLock": "Auto-lock",
+    "biometric": "Biometric unlock",
     "changePassword": "Change master password",
     "sync": "Google Drive sync",
     "import": "Import CSV"
+  },
+  "biometric": {
+    "title": "Biometric unlock",
+    "body": "When enabled, you can unlock the vault with your fingerprint or face. Your master password always keeps working.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "enable": "Enable biometric",
+    "disable": "Disable biometric",
+    "locked": "Unlock the vault first.",
+    "unavailable": "Biometrics unavailable on this device."
   },
   "language": {
     "title": "Language",

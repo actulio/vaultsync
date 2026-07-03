@@ -3,7 +3,8 @@ import { deriveMasterKey, DEFAULT_ARGON2 } from '@/crypto/argon2';
 import { deriveRecoveryKey, generateRecoveryCode } from '@/crypto/recoveryCode';
 import { decodeVaultFile, encodeVaultFile, serializeVaultHeader, type VaultFileFields } from '@/vault/format';
 import type { VaultV1 } from '@/vault/types';
-import { Keystore, VaultStore } from '@/native/keystore';
+import { VaultStore } from '@/native/keystore';
+import { disableBiometric } from './biometric';
 import { RecoverableError } from './unlock';
 
 export async function recoverAndReset(
@@ -83,10 +84,12 @@ export async function recoverAndReset(
   const newBytes = encodeVaultFile(newFields);
   await VaultStore.write('vault.enc', newBytes);
 
-  // Step 8: Re-wrap new master key in Keystore
-  await Keystore.generateKeyIfMissing();
-  const newWrapped = await Keystore.wrap(newMasterKey);
-  await VaultStore.write('masterKey.wrapped', newWrapped);
+  // Step 8: Clear biometric unlock. Recovery must never depend on biometric
+  // hardware (the user may be here BECAUSE their biometric broke), and the old
+  // wrapped copy now holds a stale master key. Disabling leaves state consistent
+  // — the vault opens with the new password, and biometric can be re-enabled from
+  // Settings. deleteKey/delete need no auth, so this can't fail on broken sensors.
+  await disableBiometric();
 
   return { newRecoveryCode };
 }

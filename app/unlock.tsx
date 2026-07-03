@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Biometric } from '@/native/biometric';
 import {
   unlockWithPassword,
   unlockWithBiometric,
   readVaultHint,
   RecoverableError,
 } from '@/auth/unlock';
+import { isBiometricEnabled } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
 
@@ -29,19 +29,25 @@ export default function Unlock(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [hint, setHint] = useState('');
   const [showHint, setShowHint] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
 
   useEffect(() => {
     void readVaultHint().then(setHint);
+    // Only offer biometric unlock if the user opted in (a Keystore-wrapped key
+    // exists). A password-only vault never shows the button.
+    void isBiometricEnabled().then(setBiometricEnabled);
   }, []);
 
   const onBiometric = async (): Promise<void> => {
-    const r = await Biometric.prompt(t('unlock.title'), '');
-    if (r !== 'success') return;
+    // unlockWithBiometric unwraps via the auth-per-use Keystore key, which shows
+    // the system biometric prompt (CryptoObject-bound). It rejects with
+    // E_KEYSTORE_CANCELED if the user dismisses it — treat that as a no-op.
     try {
       const { masterKey, vault } = await unlockWithBiometric();
       useAuthStore.getState().unlock(masterKey, vault);
       router.replace('/(app)');
     } catch (e) {
+      if ((e as { code?: string }).code === 'E_KEYSTORE_CANCELED') return;
       Alert.alert('Error', (e as Error).message);
     }
   };
@@ -108,14 +114,16 @@ export default function Unlock(): JSX.Element {
     >
       <Text style={styles.title}>{t('unlock.title')}</Text>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('unlock.biometricCta')}
-        onPress={() => { void onBiometric(); }}
-        style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
-      >
-        <Text style={styles.ctaLabel}>{t('unlock.biometricCta')}</Text>
-      </Pressable>
+      {biometricEnabled && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('unlock.biometricCta')}
+          onPress={() => { void onBiometric(); }}
+          style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
+        >
+          <Text style={styles.ctaLabel}>{t('unlock.biometricCta')}</Text>
+        </Pressable>
+      )}
 
       <Text style={styles.label}>{t('unlock.passwordLabel')}</Text>
       <TextInput

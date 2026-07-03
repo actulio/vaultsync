@@ -2,8 +2,7 @@ import { Alert, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View 
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
-import { Biometric } from '@/native/biometric';
-import { Keystore, VaultStore } from '@/native/keystore';
+import { enableBiometric } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
 
@@ -12,20 +11,23 @@ export default function BiometricEnroll(): JSX.Element {
   const { colors, spacing, radii, type } = useTheme();
 
   const enable = async (): Promise<void> => {
-    const result = await Biometric.prompt(t('biometric.title'), t('biometric.body'));
-    if (result === 'unavailable') {
-      Alert.alert(t('biometric.title'), 'Biometric unavailable on this device.');
-      router.push('/(onboarding)/drive-signin');
-      return;
-    }
-    if (result !== 'success') return;
     const key = useAuthStore.getState().masterKey;
-    if (!key) return;
-    await Keystore.generateKeyIfMissing();
-    const wrapped = await Keystore.wrap(key);
-    await VaultStore.write('masterKey.wrapped', wrapped);
-    if (Platform.OS === 'android' && Platform.Version >= 33) {
-      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+    // enableBiometric wraps the master key under the auth-per-use Keystore key,
+    // which itself shows the system biometric prompt (CryptoObject-bound). No
+    // separate availability probe is needed: it rejects if biometrics are
+    // unavailable or the user cancels, leaving biometric disabled either way.
+    if (key) {
+      try {
+        await enableBiometric(key);
+        if (Platform.OS === 'android' && Platform.Version >= 33) {
+          await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+        }
+      } catch (e) {
+        // Cancel is a deliberate choice to skip; only surface real failures.
+        if ((e as { code?: string }).code !== 'E_KEYSTORE_CANCELED') {
+          Alert.alert(t('biometric.title'), t('biometric.unavailable'));
+        }
+      }
     }
     router.push('/(onboarding)/drive-signin');
   };

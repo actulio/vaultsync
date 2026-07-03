@@ -27,7 +27,8 @@
     "title": "Enable biometric",
     "body": "Use your fingerprint or face to unlock quickly. Master password is still required after reboot.",
     "ctaEnable": "Enable",
-    "ctaSkip": "Skip for now"
+    "ctaSkip": "Skip for now",
+    "unavailable": "Biometrics unavailable on this device."
   },
   "driveSignin": {
     "title": "Connect Google Drive",

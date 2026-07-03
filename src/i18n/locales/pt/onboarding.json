@@ -27,7 +27,8 @@
     "title": "Ativar biometria",
     "body": "Use sua digital ou rosto para desbloquear o vaultsync rapidamente. Sua senha mestre continua necessária após reinicialização.",
     "ctaEnable": "Ativar",
-    "ctaSkip": "Pular por enquanto"
+    "ctaSkip": "Pular por enquanto",
+    "unavailable": "Biometria indisponível neste dispositivo."
   },
   "driveSignin": {
     "title": "Conectar Google Drive",

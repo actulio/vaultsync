@@ -31,6 +31,15 @@ jest.mock('@/native/biometric', () => ({
   },
 }));
 
+// Mocking @/auth/biometric also severs the real @/native/keystore import chain
+// (which would otherwise fail to resolve the native module under Jest). Biometric
+// unlock is opt-in, so the CTA only renders when isBiometricEnabled resolves true.
+jest.mock('@/auth/biometric', () => ({
+  isBiometricEnabled: jest.fn().mockResolvedValue(true),
+  enableBiometric: jest.fn(),
+  disableBiometric: jest.fn(),
+}));
+
 jest.mock('expo-router', () => ({
   router: { replace: jest.fn(), push: jest.fn() },
 }));
@@ -86,9 +95,19 @@ describe('Unlock screen', () => {
     expect(await findByText('Senha incorreta')).toBeTruthy();
   });
 
-  it('renders the biometric CTA button', async () => {
+  it('renders the biometric CTA button when biometric unlock is enabled', async () => {
     const { findByText } = await render(<Unlock />);
     expect(await findByText('Usar biometria')).toBeTruthy();
+  });
+
+  it('hides the biometric CTA when biometric unlock is disabled (opt-in)', async () => {
+    const bio = jest.requireMock<{ isBiometricEnabled: jest.Mock }>('@/auth/biometric');
+    bio.isBiometricEnabled.mockResolvedValueOnce(false);
+
+    const { queryByText, findByText } = await render(<Unlock />);
+    // Wait for the screen to settle (the password CTA is always present).
+    await findByText('Desbloquear');
+    expect(queryByText('Usar biometria')).toBeNull();
   });
 
   it('renders forgot password link', async () => {
