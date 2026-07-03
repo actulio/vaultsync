@@ -2,8 +2,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { generatePassword } from '@/generator/generate';
-import { DEFAULT_OPTIONS } from '@/generator/presets';
+import { PasswordGenerator } from '@/generator/PasswordGenerator';
 import { useTheme } from '@/theme';
 import type { Login, SecureNote } from '@/vault/types';
 
@@ -46,16 +45,8 @@ export function EntryForm({
   const [body, setBody] = useState(
     initial?.type === 'note' ? initial.body : '',
   );
-
-  const onGenerate = async (): Promise<void> => {
-    try {
-      setPassword(await generatePassword(DEFAULT_OPTIONS));
-    } catch (e) {
-      // DEFAULT_OPTIONS always has a character class; this branch is unreachable.
-      // Log without surfacing a hardcoded English string to users.
-      console.error('generatePassword failed:', e);
-    }
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(false);
 
   const submit = async (): Promise<void> => {
     if (title.trim() === '') return;
@@ -144,6 +135,19 @@ export function EntryForm({
     generateBtnText: {
       ...type.subhead,
       color: colors.textPrimary,
+    },
+    eyeBtn: {
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    eyeBtnText: {
+      ...type.subhead,
+      color: colors.textPrimary,
+    },
+    generatorPanel: {
+      marginTop: spacing.sm,
     },
     notesInput: {
       borderWidth: 1,
@@ -234,7 +238,7 @@ export function EntryForm({
               />
             </View>
 
-            {/* Password + Generate */}
+            {/* Password + show/hide + Generate */}
             <View>
               <Text style={styles.label}>{t('edit.fields.password')}</Text>
               <View style={styles.passwordRow}>
@@ -244,18 +248,33 @@ export function EntryForm({
                   onChangeText={setPassword}
                   placeholder={t('edit.fields.password')}
                   placeholderTextColor={colors.textMuted}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
                 />
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => { void onGenerate(); }}
+                  accessibilityLabel={
+                    showPassword ? t('edit.hidePassword') : t('edit.showPassword')
+                  }
+                  onPress={() => { setShowPassword(!showPassword); }}
+                  style={styles.eyeBtn}
+                >
+                  <Text style={styles.eyeBtnText}>{showPassword ? '🙈' : '👁️'}</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => { setShowGenerator(!showGenerator); }}
                   style={styles.generateBtn}
                 >
                   <Text style={styles.generateBtnText}>{t('edit.generate')}</Text>
                 </Pressable>
               </View>
+              {showGenerator ? (
+                <View style={styles.generatorPanel}>
+                  <PasswordGenerator onChange={setPassword} />
+                </View>
+              ) : null}
             </View>
 
             {/* URL */}

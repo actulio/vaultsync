@@ -28,6 +28,8 @@
     "newNote": "Nova nota",
     "save": "Salvar",
     "generate": "Gerar",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "fields": {
       "title": "Título", "username": "Usuário", "password": "Senha",
       "url": "URL", "notes": "Notas", "body": "Conteúdo"

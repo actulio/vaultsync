@@ -75,14 +75,30 @@ describe('NewEntry', () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('generate: pressing Gerar fills password field with generated value', async () => {
+  it('generate: pressing Gerar opens inline panel and fills password with generated value', async () => {
     await render(<NewEntry />);
 
+    // Panel is closed initially; only the row-level "Gerar" toggle exists.
     await fireEvent.press(screen.getByText('Gerar'));
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('generated-pw-xyz')).toBeTruthy();
     });
+  });
+
+  it('show/hide: toggling the eye flips secureTextEntry on the password input', async () => {
+    await render(<NewEntry />);
+
+    const passwordInput = screen.getByPlaceholderText('Senha');
+    expect(passwordInput.props.secureTextEntry).toBe(true);
+
+    await fireEvent.press(screen.getByLabelText('Mostrar senha'));
+
+    expect(passwordInput.props.secureTextEntry).toBe(false);
+
+    await fireEvent.press(screen.getByLabelText('Ocultar senha'));
+
+    expect(passwordInput.props.secureTextEntry).toBe(true);
   });
 });
 
