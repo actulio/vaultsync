@@ -47,6 +47,7 @@ export function EntryForm({
   );
   const [showPassword, setShowPassword] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [generatorOpened, setGeneratorOpened] = useState(false);
   const [titleError, setTitleError] = useState(false);
 
   const submit = async (): Promise<void> => {
@@ -288,14 +289,20 @@ export function EntryForm({
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => { setShowGenerator(!showGenerator); }}
+                  onPress={() => {
+                    const next = !showGenerator;
+                    setShowGenerator(next);
+                    if (next) setGeneratorOpened(true);
+                  }}
                   style={styles.generateBtn}
                 >
-                  <Text style={styles.generateBtnText}>{t('edit.generate')}</Text>
+                  <Text style={styles.generateBtnText}>{t('edit.generatorToggle')}</Text>
                 </Pressable>
               </View>
-              {showGenerator ? (
-                <View style={styles.generatorPanel}>
+              {generatorOpened ? (
+                <View
+                  style={[styles.generatorPanel, { display: showGenerator ? 'flex' : 'none' }]}
+                >
                   <PasswordGenerator onChange={setPassword} />
                 </View>
               ) : null}

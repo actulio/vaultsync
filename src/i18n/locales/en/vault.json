@@ -28,6 +28,7 @@
     "newNote": "New note",
     "save": "Save",
     "generate": "Generate",
+    "generatorToggle": "Password generator",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "fields": {

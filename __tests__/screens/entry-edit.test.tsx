@@ -75,15 +75,40 @@ describe('NewEntry', () => {
     expect(router.back).toHaveBeenCalled();
   });
 
-  it('generate: pressing Gerar opens inline panel and fills password with generated value', async () => {
+  it('generate: pressing Gerador de senha opens inline panel and fills password with generated value', async () => {
     await render(<NewEntry />);
 
-    // Panel is closed initially; only the row-level "Gerar" toggle exists.
-    await fireEvent.press(screen.getByText('Gerar'));
+    // Panel is closed initially; only the row-level "Gerador de senha" toggle exists.
+    await fireEvent.press(screen.getByText('Gerador de senha'));
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('generated-pw-xyz')).toBeTruthy();
     });
+  });
+
+  it('regression: closing then reopening the generator panel does not remount it or overwrite the password', async () => {
+    await render(<NewEntry />);
+
+    // Open the panel — mounts PasswordGenerator, which auto-generates once.
+    await fireEvent.press(screen.getByText('Gerador de senha'));
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('generated-pw-xyz')).toBeTruthy();
+    });
+
+    // User tweaks the password manually after generation.
+    await fireEvent.changeText(
+      screen.getByDisplayValue('generated-pw-xyz'),
+      'user-edited-pw',
+    );
+
+    // Close the panel.
+    await fireEvent.press(screen.getByText('Gerador de senha'));
+
+    // Reopen the panel — must NOT remount PasswordGenerator (no re-generation).
+    await fireEvent.press(screen.getByText('Gerador de senha'));
+
+    expect(screen.getByDisplayValue('user-edited-pw')).toBeTruthy();
   });
 
   it('show/hide: toggling the eye flips secureTextEntry on the password input', async () => {

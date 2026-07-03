@@ -28,6 +28,7 @@
     "newNote": "Nova nota",
     "save": "Salvar",
     "generate": "Gerar",
+    "generatorToggle": "Gerador de senha",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "fields": {
