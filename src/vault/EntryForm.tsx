@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react-native';
 import { PasswordGenerator } from '@/generator/PasswordGenerator';
 import { useTheme } from '@/theme';
 import type { Login, SecureNote } from '@/vault/types';
@@ -158,10 +159,6 @@ export function EntryForm({
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
     },
-    eyeBtnText: {
-      ...type.subhead,
-      color: colors.textPrimary,
-    },
     generatorPanel: {
       marginTop: spacing.sm,
     },
@@ -285,10 +282,15 @@ export function EntryForm({
                   onPress={() => { setShowPassword(!showPassword); }}
                   style={styles.eyeBtn}
                 >
-                  <Text style={styles.eyeBtnText}>{showPassword ? '🙈' : '👁️'}</Text>
+                  {showPassword ? (
+                    <EyeOff size={20} color={colors.textSecondary} />
+                  ) : (
+                    <Eye size={20} color={colors.textSecondary} />
+                  )}
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
+                  accessibilityLabel={t('edit.generatorToggle')}
                   onPress={() => {
                     const next = !showGenerator;
                     setShowGenerator(next);
@@ -296,7 +298,11 @@ export function EntryForm({
                   }}
                   style={styles.generateBtn}
                 >
-                  <Text style={styles.generateBtnText}>{t('edit.generatorToggle')}</Text>
+                  {showGenerator ? (
+                    <ChevronUp size={20} color={colors.textPrimary} />
+                  ) : (
+                    <ChevronDown size={20} color={colors.textPrimary} />
+                  )}
                 </Pressable>
               </View>
               {generatorOpened ? (

@@ -79,7 +79,7 @@ describe('NewEntry', () => {
     await render(<NewEntry />);
 
     // Panel is closed initially; only the row-level "Gerador de senha" toggle exists.
-    await fireEvent.press(screen.getByText('Gerador de senha'));
+    await fireEvent.press(screen.getByLabelText('Gerador de senha'));
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('generated-pw-xyz')).toBeTruthy();
@@ -90,7 +90,7 @@ describe('NewEntry', () => {
     await render(<NewEntry />);
 
     // Open the panel — mounts PasswordGenerator, which auto-generates once.
-    await fireEvent.press(screen.getByText('Gerador de senha'));
+    await fireEvent.press(screen.getByLabelText('Gerador de senha'));
 
     await waitFor(() => {
       expect(screen.getByDisplayValue('generated-pw-xyz')).toBeTruthy();
@@ -103,10 +103,10 @@ describe('NewEntry', () => {
     );
 
     // Close the panel.
-    await fireEvent.press(screen.getByText('Gerador de senha'));
+    await fireEvent.press(screen.getByLabelText('Gerador de senha'));
 
     // Reopen the panel — must NOT remount PasswordGenerator (no re-generation).
-    await fireEvent.press(screen.getByText('Gerador de senha'));
+    await fireEvent.press(screen.getByLabelText('Gerador de senha'));
 
     expect(screen.getByDisplayValue('user-edited-pw')).toBeTruthy();
   });
