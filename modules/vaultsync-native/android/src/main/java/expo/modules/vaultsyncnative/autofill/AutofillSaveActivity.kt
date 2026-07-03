@@ -4,11 +4,9 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import expo.modules.vaultsyncnative.R
+import expo.modules.vaultsyncnative.VaultIO
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
@@ -20,14 +18,24 @@ import java.util.UUID
  * computed by the pure [SavePolicy] and NOTHING is written without explicit confirmation (the only
  * write-free branch is an exact-credential no-op).
  *
- * Flow: warm cache -> decide immediately. Cold/expired cache -> BiometricPrompt FIRST (locked-vault
- * rule), then fill the cache exactly like [AutofillUnlockActivity] (decryptCurrent -> cache.put,
- * same try/catch + Log.w contract), then decide. After any successful write we enqueue a sync push
- * and invalidate the cache.
+ * Biometric contract: a CryptoObject-bound BiometricPrompt via [authenticateAndUnwrapMasterKey],
+ * mirroring VaultsyncNativeModule.authenticateCipher (I2a). The biometric auth authorizes the exact
+ * `vault_kek` decrypt Cipher, so both the decrypt-to-decide and the re-encrypt-to-write run on the
+ * unwrapped master key — no separate, un-authorized Keystore call.
+ *
+ * Flow: warm cache -> decide immediately. Cold/expired cache -> CryptoObject BiometricPrompt FIRST
+ * (locked-vault rule), then fill the cache and decide. Per I2b-D1 the cold-save path prompts ONCE:
+ * the unwrapped key is held across the confirm dialog ([heldMasterKey]) and reused for the write, so
+ * the write does not re-prompt. In the warm path the write prompts on demand. After any successful
+ * write we enqueue a sync push and invalidate the cache.
  *
  * The dialog/biometric UI is not instrumentable; the testable core is [SavePolicy] + [SyncQueue].
  */
 class AutofillSaveActivity : FragmentActivity() {
+  // I2b-D1: in the cold-save path we hold the unwrapped master key across the confirm dialog and
+  // reuse it for the write (one prompt total). Zeroed in onDestroy.
+  private var heldMasterKey: ByteArray? = null
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val pkg = intent.getStringExtra("packageName")
@@ -46,46 +54,64 @@ class AutofillSaveActivity : FragmentActivity() {
       decide(pkg, web, username, password)
     } else {
       // Locked/expired vault: authenticate FIRST, then fill the cold cache like the unlock path.
-      authenticateThen {
-        try {
-          val view = VaultDecryptor(applicationContext).decryptCurrent()
-          VaultCacheHolder.instance.put(view)
-          decide(pkg, web, username, password)
-        } catch (e: Exception) {
-          // Only abort silently if the vault genuinely cannot be decrypted (and log it).
-          Log.w("VaultSync", "Autofill save: vault decrypt failed", e)
+      authenticateAndUnwrapMasterKey(
+        activity = this,
+        title = getString(R.string.autofill_save_title),
+        subtitle = null,
+        onSuccess = { mk ->
+          heldMasterKey = mk // I2b-D1: keep it for the write; do NOT zero yet (onDestroy zeros it).
+          try {
+            val view = VaultDecryptor.decryptToView(
+              VaultIO(applicationContext).read("vault.enc"),
+              mk,
+            )
+            VaultCacheHolder.instance.put(view)
+            decide(pkg, web, username, password)
+          } catch (e: Exception) {
+            // Only abort silently if the vault genuinely cannot be decrypted (and log it).
+            Log.w("VaultSync", "Autofill save: vault decrypt failed", e)
+            finish()
+          }
+        },
+        onError = {
+          setResult(Activity.RESULT_CANCELED)
           finish()
-        }
-      }
+        },
+      )
     }
   }
 
-  private fun authenticateThen(action: () -> Unit) {
-    val canAuth = BiometricManager.from(this)
-      .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-    if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
-      setResult(Activity.RESULT_CANCELED)
-      finish()
-      return
-    }
-    val prompt = BiometricPrompt(this, ContextCompat.getMainExecutor(this),
-      object : BiometricPrompt.AuthenticationCallback() {
-        override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
-          action()
-        }
+  override fun onDestroy() {
+    heldMasterKey?.fill(0) // T4: zero the held master key.
+    super.onDestroy()
+  }
 
-        override fun onAuthenticationError(code: Int, msg: CharSequence) {
+  /**
+   * Runs [action] with the unwrapped master key. Cold path reuses [heldMasterKey] (no re-prompt,
+   * per I2b-D1). Warm path prompts on demand and zeros the key after the action.
+   */
+  private fun withMasterKey(action: (ByteArray) -> Unit) {
+    val held = heldMasterKey
+    if (held != null) {
+      action(held) // onDestroy owns zeroing the held key.
+    } else {
+      authenticateAndUnwrapMasterKey(
+        activity = this,
+        title = getString(R.string.autofill_save_title),
+        subtitle = null,
+        onSuccess = { mk ->
+          try {
+            action(mk)
+          } finally {
+            mk.fill(0) // T4: zero the unwrapped master key after use.
+          }
+        },
+        onError = {
           setResult(Activity.RESULT_CANCELED)
           finish()
-        }
-      })
-    prompt.authenticate(
-      BiometricPrompt.PromptInfo.Builder()
-        .setTitle(getString(R.string.autofill_save_title))
-        .setNegativeButtonText(getString(android.R.string.cancel))
-        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-        .build(),
-    )
+        },
+      )
+    }
   }
 
   private fun decide(pkg: String?, web: String?, username: String, password: String) {
@@ -121,10 +147,12 @@ class AutofillSaveActivity : FragmentActivity() {
 
   private fun confirm(title: String, message: String, actionLabel: String, onConfirm: () -> Unit) {
     // Framework AlertDialog (no appcompat dep). Compose polish is out of v1 scope.
+    // The positive button only kicks off onConfirm — the write path owns finish() (the warm-save
+    // write is async once it goes through a fresh biometric prompt, so finishing here would race).
     AlertDialog.Builder(this)
       .setTitle(title)
       .setMessage(message)
-      .setPositiveButton(actionLabel) { _, _ -> onConfirm(); finish() }
+      .setPositiveButton(actionLabel) { _, _ -> onConfirm() }
       .setNegativeButton(android.R.string.cancel) { _, _ -> finish() }
       .setOnCancelListener { finish() }
       .show()
@@ -147,35 +175,41 @@ class AutofillSaveActivity : FragmentActivity() {
       put("createdAt", now)
       put("updatedAt", now)
     }
-    VaultEncryptor(applicationContext).updateCurrent { json ->
-      VaultJson.reserialize(json) { root ->
-        // APPEND — never put(0, ...), which would destroy an existing entry.
-        root.getJSONArray("entries").put(newEntry)
-        root.put("updatedAt", now)
+    withMasterKey { mk ->
+      VaultEncryptor(applicationContext).updateCurrentWithKey(mk) { json ->
+        VaultJson.reserialize(json) { root ->
+          // APPEND — never put(0, ...), which would destroy an existing entry.
+          root.getJSONArray("entries").put(newEntry)
+          root.put("updatedAt", now)
+        }
       }
+      afterWrite()
+      finish()
     }
-    afterWrite()
   }
 
   private fun updatePassword(id: String, password: String) {
     val now = Instant.now().toString()
-    VaultEncryptor(applicationContext).updateCurrent { json ->
-      VaultJson.reserialize(json) { root ->
-        val arr = root.getJSONArray("entries")
-        for (i in 0 until arr.length()) {
-          val e = arr.getJSONObject(i)
-          if (e.optString("id") == id) {
-            // Shape mirrors the TS side (src/vault/mutations.ts clearStalePreviousPasswords): the
-            // 7-day cleanup keys off `updatedAt` and only requires `previousPassword` to be present.
-            e.put("previousPassword", e.optString("password"))
-            e.put("password", password)
-            e.put("updatedAt", now)
+    withMasterKey { mk ->
+      VaultEncryptor(applicationContext).updateCurrentWithKey(mk) { json ->
+        VaultJson.reserialize(json) { root ->
+          val arr = root.getJSONArray("entries")
+          for (i in 0 until arr.length()) {
+            val e = arr.getJSONObject(i)
+            if (e.optString("id") == id) {
+              // Shape mirrors the TS side (src/vault/mutations.ts clearStalePreviousPasswords): the
+              // 7-day cleanup keys off `updatedAt` and only requires `previousPassword` to be present.
+              e.put("previousPassword", e.optString("password"))
+              e.put("password", password)
+              e.put("updatedAt", now)
+            }
           }
+          root.put("updatedAt", now)
         }
-        root.put("updatedAt", now)
       }
+      afterWrite()
+      finish()
     }
-    afterWrite()
   }
 
   /** After ANY successful write: enqueue a sync push and drop the (now-stale) cache. */

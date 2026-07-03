@@ -1,8 +1,6 @@
 package expo.modules.vaultsyncnative.autofill
 
 import android.content.Context
-import expo.modules.vaultsyncnative.Keystore
-import expo.modules.vaultsyncnative.VaultIO
 import org.bouncycastle.crypto.modes.ChaCha20Poly1305
 import org.bouncycastle.crypto.params.AEADParameters
 import org.bouncycastle.crypto.params.KeyParameter
@@ -32,22 +30,6 @@ data class VaultLayout(
  * argon2Params (all little-endian): memoryKiB u32 | timeCost u16 | parallelism u16 | hashLen u16.
  */
 class VaultDecryptor(private val ctx: Context) {
-
-  /**
-   * Thin I/O wrapper: reads vault.enc + masterKey.wrapped, unwraps the biometric-gated master key,
-   * and decrypts. The Keystore path is not exercised by instrumented tests (requires user auth).
-   */
-  fun decryptCurrent(): VaultJsonView {
-    val io = VaultIO(ctx)
-    val vaultBytes = io.read("vault.enc")
-    val masterKey = Keystore(alias = "vault_kek", requireUserAuth = true)
-      .unwrap(io.read("masterKey.wrapped"))
-    try {
-      return decryptToView(vaultBytes, masterKey)
-    } finally {
-      masterKey.fill(0) // T4: zero the unwrapped master key after use.
-    }
-  }
 
   companion object {
     private val MAGIC = byteArrayOf(0x56, 0x4c, 0x54, 0x31) // "VLT1"

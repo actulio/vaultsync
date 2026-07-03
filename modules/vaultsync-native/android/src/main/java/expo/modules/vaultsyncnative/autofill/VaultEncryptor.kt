@@ -1,7 +1,6 @@
 package expo.modules.vaultsyncnative.autofill
 
 import android.content.Context
-import expo.modules.vaultsyncnative.Keystore
 import expo.modules.vaultsyncnative.VaultIO
 import org.bouncycastle.crypto.modes.ChaCha20Poly1305
 import org.bouncycastle.crypto.params.AEADParameters
@@ -18,23 +17,17 @@ import java.security.SecureRandom
 class VaultEncryptor(private val ctx: Context) {
 
   /**
-   * Thin I/O wrapper: reads the current vault, unwraps the biometric-gated key, applies [modifier]
-   * to the raw JSON, re-encrypts, and atomically persists via [VaultIO]. The Keystore path is not
-   * exercised by instrumented tests (requires user auth).
+   * Re-encrypt the current vault with a caller-supplied master key. The key is already unwrapped by
+   * the CryptoObject-bound BiometricPrompt (see [authenticateAndUnwrapMasterKey]); this helper does
+   * NOT touch the Keystore and does NOT zero the caller-owned key. Holds the process-wide write lock
+   * across the FULL read->modify->write so an interleaving JS persistVault (which also locks in
+   * writeAtomic) can't land between our read and our write.
    */
-  fun updateCurrent(modifier: (String) -> String) {
+  fun updateCurrentWithKey(masterKey: ByteArray, modifier: (String) -> String) {
     val io = VaultIO(ctx)
-    // Hold the process-wide write lock across the FULL read->modify->write so an interleaving JS
-    // persistVault (which also locks in writeAtomic) can't land between our read and our write.
     synchronized(VaultIO.WRITE_LOCK) {
       val original = io.read("vault.enc")
-      val masterKey = Keystore(alias = "vault_kek", requireUserAuth = true)
-        .unwrap(io.read("masterKey.wrapped"))
-      try {
-        io.writeAtomic("vault.enc", reencrypt(original, masterKey, modifier))
-      } finally {
-        masterKey.fill(0) // T4: zero the unwrapped master key after use.
-      }
+      io.writeAtomic("vault.enc", reencrypt(original, masterKey, modifier))
     }
   }
 

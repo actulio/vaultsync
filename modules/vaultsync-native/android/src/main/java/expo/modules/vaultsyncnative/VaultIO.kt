@@ -24,7 +24,7 @@ class VaultIO(private val ctx: Context) {
   }
 
   // Serialize all writes on a process-wide monitor so the two in-process read-modify-write paths
-  // (JS persistVault -> VaultIO and VaultEncryptor.updateCurrent) cannot interleave. The monitor is
+  // (JS persistVault -> VaultIO and VaultEncryptor.updateCurrentWithKey) cannot interleave. The monitor is
   // reentrant, so VaultEncryptor can hold WRITE_LOCK across its full read->modify->write and this
   // nested writeAtomic call re-enters harmlessly. (Cross-runtime JS<->Kotlin locking is out of scope.)
   fun writeAtomic(name: String, bytes: ByteArray) {
