@@ -135,6 +135,34 @@ describe('GeneratorScreen', () => {
     });
   });
 
+  it('disables Copiar and does not copy a stale password when generatePassword fails', async () => {
+    await render(<GeneratorScreen />);
+    await waitFor(() => {
+      expect(screen.getByText('MockedPw-1234-AbCd')).toBeTruthy();
+    });
+
+    const generateMock = getGenerateMock();
+    const copyMock = getCopyMock();
+    generateMock.mockRejectedValueOnce(new Error('at least one character class required'));
+
+    // Toggle a switch to force PasswordGenerator to re-run regen(), which now fails.
+    const switches = screen.getAllByRole('switch');
+    const firstSwitch = switches[0];
+    if (!firstSwitch) throw new Error('No switches found');
+    await fireEvent(firstSwitch, 'valueChange', false);
+
+    await waitFor(() => {
+      expect(screen.getByText('—')).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Copiar' }).props.accessibilityState?.disabled).toBeTruthy();
+    });
+
+    await fireEvent.press(screen.getByText('Copiar'));
+    expect(copyMock).not.toHaveBeenCalled();
+  });
+
   it('toggling a class Switch triggers generatePassword again (opts change)', async () => {
     await render(<GeneratorScreen />);
     await waitFor(() => {

@@ -70,6 +70,7 @@ export function PasswordGenerator({
       onChange(next);
     } catch {
       setPw('');
+      onChange('');
     }
   };
 

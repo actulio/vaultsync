@@ -91,6 +91,31 @@ describe('PasswordGenerator', () => {
     });
   });
 
+  it('calls onChange with an empty string when generatePassword fails (no character class selected)', async () => {
+    const onChange = jest.fn();
+    getGenerateMock().mockRejectedValueOnce(new Error('at least one character class required'));
+
+    await render(
+      <PasswordGenerator
+        onChange={onChange}
+        initialOptions={{
+          length: 20,
+          lower: false,
+          upper: false,
+          digits: false,
+          symbols: false,
+          avoidAmbiguous: false,
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith('');
+    });
+
+    expect(screen.getByText('—')).toBeTruthy();
+  });
+
   it('toggling a class Switch regenerates the password (opts change)', async () => {
     const onChange = jest.fn();
     await render(<PasswordGenerator onChange={onChange} />);
