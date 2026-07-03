@@ -149,10 +149,6 @@ export function EntryForm({
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
     },
-    generateBtnText: {
-      ...type.subhead,
-      color: colors.textPrimary,
-    },
     eyeBtn: {
       backgroundColor: colors.surfaceAlt,
       borderRadius: radii.md,
