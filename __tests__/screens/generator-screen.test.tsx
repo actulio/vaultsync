@@ -144,7 +144,7 @@ describe('GeneratorScreen', () => {
     const generateMock = getGenerateMock();
     const callsBefore = generateMock.mock.calls.length;
 
-    // Toggle the 'a–z' (lower) switch — label comes from generator.lower i18n key
+    // Toggle the "Minúsculas (a–z)" (lower) switch — label comes from generator.lower i18n key
     const switches = screen.getAllByRole('switch');
     const firstSwitch = switches[0];
     if (!firstSwitch) throw new Error('No switches found');

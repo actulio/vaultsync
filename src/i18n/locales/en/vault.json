@@ -36,9 +36,9 @@
   "generator": {
     "length": "Length",
     "avoidAmbiguous": "Avoid ambiguous (0/O/l/1)",
-    "lower": "a–z",
-    "upper": "A–Z",
-    "digits": "0–9",
-    "symbols": "!@#"
+    "lower": "Lowercase (a–z)",
+    "upper": "Uppercase (A–Z)",
+    "digits": "Numbers (0–9)",
+    "symbols": "Symbols (!@#)"
   }
 }

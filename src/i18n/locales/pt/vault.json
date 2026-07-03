@@ -36,9 +36,9 @@
   "generator": {
     "length": "Comprimento",
     "avoidAmbiguous": "Evitar ambíguos (0/O/l/1)",
-    "lower": "a–z",
-    "upper": "A–Z",
-    "digits": "0–9",
-    "symbols": "!@#"
+    "lower": "Minúsculas (a–z)",
+    "upper": "Maiúsculas (A–Z)",
+    "digits": "Números (0–9)",
+    "symbols": "Símbolos (!@#)"
   }
 }
