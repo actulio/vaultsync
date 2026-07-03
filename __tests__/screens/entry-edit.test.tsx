@@ -174,6 +174,19 @@ describe('EditEntry', () => {
     expect(persistVault).not.toHaveBeenCalled();
   });
 
+  it('clear password: pressing Limpar senha empties the password field, button absent when field is empty', async () => {
+    await render(<EditEntry />);
+
+    const passwordInput = screen.getByPlaceholderText('Senha');
+    expect(passwordInput.props.value).toBe('secret');
+    expect(screen.getByLabelText('Limpar senha')).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText('Limpar senha'));
+
+    expect(screen.getByPlaceholderText('Senha').props.value).toBe('');
+    expect(screen.queryByLabelText('Limpar senha')).toBeNull();
+  });
+
   it('save after filling title: clears validation error and calls onSubmit (persistVault)', async () => {
     const { persistVault } = jest.requireMock<{ persistVault: jest.Mock }>('@/vault/persist');
 

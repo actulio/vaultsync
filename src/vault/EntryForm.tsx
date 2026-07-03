@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Eye, EyeOff, X } from 'lucide-react-native';
 import { PasswordGenerator } from '@/generator/PasswordGenerator';
 import { useTheme } from '@/theme';
 import type { Login, SecureNote } from '@/vault/types';
@@ -284,6 +284,16 @@ export function EntryForm({
                     <Eye size={20} color={colors.textSecondary} />
                   )}
                 </Pressable>
+                {password.length > 0 ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t('edit.clearPassword')}
+                    onPress={() => { setPassword(''); }}
+                    style={styles.eyeBtn}
+                  >
+                    <X size={20} color={colors.textSecondary} />
+                  </Pressable>
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t('edit.generatorToggle')}

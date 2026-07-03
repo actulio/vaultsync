@@ -31,6 +31,7 @@
     "generatorToggle": "Gerador de senha",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
+    "clearPassword": "Limpar senha",
     "fields": {
       "title": "Título", "username": "Usuário", "password": "Senha",
       "url": "URL", "notes": "Notas", "body": "Conteúdo"

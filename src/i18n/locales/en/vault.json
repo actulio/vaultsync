@@ -31,6 +31,7 @@
     "generatorToggle": "Password generator",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
+    "clearPassword": "Clear password",
     "fields": {
       "title": "Title", "username": "Username", "password": "Password",
       "url": "URL", "notes": "Notes", "body": "Body"
