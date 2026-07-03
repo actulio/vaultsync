@@ -1,12 +1,31 @@
 import { Stack } from 'expo-router';
 import { useEffect, type JSX } from 'react';
 import * as Localization from 'expo-localization';
+import { StyleSheet } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { initI18n, detectLanguageFromTag, type SupportedLanguage } from '@/i18n';
 import { registerUiNamespaces } from '@/i18n/registerUiNamespaces';
-import { ThemeProvider } from '@/theme';
+import { ThemeProvider, useTheme } from '@/theme';
 import { startAutoLock } from '@/auth/autoLock';
 import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
+
+function ThemedRoot(): JSX.Element {
+  const { colors } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+  });
+
+  return (
+    <SafeAreaView edges={['top']} style={styles.container}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SafeAreaView>
+  );
+}
 
 export default function RootLayout(): JSX.Element {
   useEffect(() => {
@@ -28,8 +47,10 @@ export default function RootLayout(): JSX.Element {
   useEffect(() => startSyncOnForeground(), []);
 
   return (
-    <ThemeProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <ThemedRoot />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
