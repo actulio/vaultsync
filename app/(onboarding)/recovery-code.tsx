@@ -109,7 +109,7 @@ export default function RecoveryCode(): JSX.Element {
         disabled={!confirmed}
         onPress={() => {
           if (from === 'settings') {
-            router.replace('/(app)');
+            router.replace('/(app)/(tabs)');
           } else {
             router.push('/(onboarding)/biometric');
           }

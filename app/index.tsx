@@ -10,5 +10,5 @@ export default function Index(): JSX.Element | null {
   if (status === 'bootstrapping') return null;
   if (status === 'no_vault') return <Redirect href="/(onboarding)/welcome" />;
   if (status === 'locked') return <Redirect href="/unlock" />;
-  return <Redirect href="/(app)" />;
+  return <Redirect href="/(app)/(tabs)" />;
 }

@@ -47,7 +47,7 @@ describe('RecoveryCode', () => {
     expect(getRouter().replace).not.toHaveBeenCalled();
   });
 
-  it('settings path: CTA replaces to /(app) when from=settings', async () => {
+  it('settings path: CTA replaces to /(app)/(tabs) when from=settings', async () => {
     mockParams = { code: 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF', from: 'settings' };
     const { getByRole } = await render(<RecoveryCode />);
     void fireEvent.press(getByRole('checkbox'));
@@ -55,7 +55,7 @@ describe('RecoveryCode', () => {
       expect(getByRole('button', { name: 'Continuar' }).props.accessibilityState?.disabled).toBeFalsy(),
     );
     void fireEvent.press(getByRole('button', { name: 'Continuar' }));
-    expect(getRouter().replace).toHaveBeenCalledWith('/(app)');
+    expect(getRouter().replace).toHaveBeenCalledWith('/(app)/(tabs)');
     expect(getRouter().push).not.toHaveBeenCalledWith('/(onboarding)/biometric');
   });
 });

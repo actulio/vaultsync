@@ -45,7 +45,7 @@ export default function Unlock(): JSX.Element {
     try {
       const { masterKey, vault } = await unlockWithBiometric();
       useAuthStore.getState().unlock(masterKey, vault);
-      router.replace('/(app)');
+      router.replace('/(app)/(tabs)');
     } catch (e) {
       if ((e as { code?: string }).code === 'E_KEYSTORE_CANCELED') return;
       Alert.alert('Error', (e as Error).message);
@@ -57,7 +57,7 @@ export default function Unlock(): JSX.Element {
     try {
       const { masterKey, vault } = await unlockWithPassword(pw);
       useAuthStore.getState().unlock(masterKey, vault);
-      router.replace('/(app)');
+      router.replace('/(app)/(tabs)');
     } catch (e) {
       if (e instanceof RecoverableError && e.code === 'wrong_password') {
         setError(t('unlock.wrongPassword'));

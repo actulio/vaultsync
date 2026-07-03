@@ -11,12 +11,12 @@ export default function DriveSignin(): JSX.Element {
 
   const connect = async (): Promise<void> => {
     const ok = await signInWithGoogle();
-    if (ok) router.replace('/(app)');
+    if (ok) router.replace('/(app)/(tabs)');
   };
 
   const skip = (): void => {
     skipDriveForNow();
-    router.replace('/(app)');
+    router.replace('/(app)/(tabs)');
   };
 
   const styles = StyleSheet.create({
