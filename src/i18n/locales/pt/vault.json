@@ -33,7 +33,8 @@
     "fields": {
       "title": "Título", "username": "Usuário", "password": "Senha",
       "url": "URL", "notes": "Notas", "body": "Conteúdo"
-    }
+    },
+    "errorTitleRequired": "O título é obrigatório"
   },
   "generator": {
     "length": "Comprimento",

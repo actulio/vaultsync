@@ -47,9 +47,13 @@ export function EntryForm({
   );
   const [showPassword, setShowPassword] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [titleError, setTitleError] = useState(false);
 
   const submit = async (): Promise<void> => {
-    if (title.trim() === '') return;
+    if (title.trim() === '') {
+      setTitleError(true);
+      return;
+    }
     if (kind === 'login') {
       const data: Omit<Login, 'id' | 'type' | 'createdAt' | 'updatedAt'> = {
         title,
@@ -111,6 +115,17 @@ export function EntryForm({
       padding: spacing.md,
       ...type.body,
       color: colors.textPrimary,
+    },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    required: {
+      color: colors.danger,
+    },
+    errorText: {
+      ...type.caption,
+      color: colors.danger,
+      marginTop: spacing.xs,
     },
     passwordRow: {
       flexDirection: 'row',
@@ -210,16 +225,25 @@ export function EntryForm({
       <View style={styles.fieldGap}>
         {/* Title */}
         <View>
-          <Text style={styles.label}>{t('edit.fields.title')}</Text>
+          <Text style={styles.label}>
+            {t('edit.fields.title')}
+            <Text style={styles.required}> *</Text>
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, titleError ? styles.inputError : null]}
             value={title}
-            onChangeText={setTitle}
+            onChangeText={(v) => {
+              setTitle(v);
+              if (titleError) setTitleError(false);
+            }}
             placeholder={t('edit.fields.title')}
             placeholderTextColor={colors.textMuted}
             autoCapitalize="none"
             autoCorrect={false}
           />
+          {titleError ? (
+            <Text style={styles.errorText}>{t('edit.errorTitleRequired')}</Text>
+          ) : null}
         </View>
 
         {kind === 'login' ? (

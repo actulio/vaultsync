@@ -132,4 +132,42 @@ describe('EditEntry', () => {
     expect(screen.getByText('Login')).toBeTruthy();
     expect(screen.getByText('Nota segura')).toBeTruthy();
   });
+
+  it('save with empty title: shows validation error and does not call onSubmit (persistVault)', async () => {
+    const { persistVault } = jest.requireMock<{ persistVault: jest.Mock }>('@/vault/persist');
+
+    await render(<EditEntry />);
+
+    await fireEvent.changeText(screen.getByDisplayValue('GitHub'), '');
+
+    await fireEvent.press(screen.getByText('Salvar'));
+
+    await waitFor(() => {
+      expect(screen.getByText('O título é obrigatório')).toBeTruthy();
+    });
+
+    expect(persistVault).not.toHaveBeenCalled();
+  });
+
+  it('save after filling title: clears validation error and calls onSubmit (persistVault)', async () => {
+    const { persistVault } = jest.requireMock<{ persistVault: jest.Mock }>('@/vault/persist');
+
+    await render(<EditEntry />);
+
+    await fireEvent.changeText(screen.getByDisplayValue('GitHub'), '');
+    await fireEvent.press(screen.getByText('Salvar'));
+
+    await waitFor(() => {
+      expect(screen.getByText('O título é obrigatório')).toBeTruthy();
+    });
+
+    await fireEvent.changeText(screen.getByPlaceholderText('Título'), 'Updated Title');
+    await fireEvent.press(screen.getByText('Salvar'));
+
+    await waitFor(() => {
+      expect(persistVault).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.queryByText('O título é obrigatório')).toBeNull();
+  });
 });
