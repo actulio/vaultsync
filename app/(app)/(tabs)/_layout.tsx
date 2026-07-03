@@ -5,6 +5,8 @@ import type { ColorValue } from 'react-native';
 import { KeyRound, Settings, Vault } from 'lucide-react-native';
 import { useTheme } from '@/theme';
 
+type TabIconProps = { focused: boolean; color: ColorValue; size: number };
+
 export default function TabsLayout(): JSX.Element {
   const { t } = useTranslation('vault');
   const { colors } = useTheme();
@@ -25,7 +27,7 @@ export default function TabsLayout(): JSX.Element {
         name="index"
         options={{
           title: t('tabs.vault'),
-          tabBarIcon: ({ color, size }: { focused: boolean; color: ColorValue; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Vault color={color} size={size} />
           ),
         }}
@@ -34,7 +36,7 @@ export default function TabsLayout(): JSX.Element {
         name="generator"
         options={{
           title: t('tabs.generator'),
-          tabBarIcon: ({ color, size }: { focused: boolean; color: ColorValue; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <KeyRound color={color} size={size} />
           ),
         }}
@@ -43,7 +45,7 @@ export default function TabsLayout(): JSX.Element {
         name="settings"
         options={{
           title: t('tabs.settings'),
-          tabBarIcon: ({ color, size }: { focused: boolean; color: ColorValue; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Settings color={color} size={size} />
           ),
         }}
