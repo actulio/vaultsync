@@ -93,7 +93,13 @@ class AutofillSaveActivity : FragmentActivity() {
   private fun withMasterKey(action: (ByteArray) -> Unit) {
     val held = heldMasterKey
     if (held != null) {
-      action(held) // onDestroy owns zeroing the held key.
+      try {
+        action(held) // onDestroy owns zeroing the held key.
+      } catch (e: Exception) {
+        Log.w("VaultSync", "Autofill save: write failed", e)
+        setResult(Activity.RESULT_CANCELED)
+        finish()
+      }
     } else {
       authenticateAndUnwrapMasterKey(
         activity = this,
@@ -102,6 +108,10 @@ class AutofillSaveActivity : FragmentActivity() {
         onSuccess = { mk ->
           try {
             action(mk)
+          } catch (e: Exception) {
+            Log.w("VaultSync", "Autofill save: write failed", e)
+            setResult(Activity.RESULT_CANCELED)
+            finish()
           } finally {
             mk.fill(0) // T4: zero the unwrapped master key after use.
           }

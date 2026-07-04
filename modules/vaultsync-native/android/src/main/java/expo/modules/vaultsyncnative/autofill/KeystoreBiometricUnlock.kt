@@ -67,7 +67,13 @@ fun authenticateAndUnwrapMasterKey(
       override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
         if (!settled.compareAndSet(false, true)) return
         val authed = result.cryptoObject?.cipher ?: return onError()
-        onSuccess(authed.doFinal(combined))
+        val masterKey = try {
+          authed.doFinal(combined)
+        } catch (e: Exception) {
+          onError()
+          return
+        }
+        onSuccess(masterKey)
       }
 
       override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
