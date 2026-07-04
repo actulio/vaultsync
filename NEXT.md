@@ -1,5 +1,82 @@
 # VaultSync — what's next
 
+## ✅ CURRENT STATE — updated 2026-07-04 (source of truth; sections below predate this and are provenance only)
+
+Everything is **pushed to `origin/main`, HEAD `c753269`** (origin even with local). Since the six-plan v1
+series shipped, these landed (all pushed): Plan 7 (entry-form UX), backlogs A–D, the JS crypto backend swaps
+(libsodium WASM → `react-native-libsodium` + `@noble/ciphers`, secure-RNG polyfill), and three release-gated items:
+
+- **I2 keystore CryptoObject — CODE-COMPLETE (I2a `9ace557` + I2b `c0fb585`/`4fa11f8`).** `vault_kek` unwrap now
+  runs behind a `BiometricPrompt.CryptoObject`-bound cipher on BOTH the main-app path (I2a) and the two autofill
+  activities (I2b: `AutofillUnlockActivity`, `AutofillSaveActivity`, via shared `KeystoreBiometricUnlock.kt`).
+  Cold-vault autofill save prompts **once** and reuses the held master key for decrypt + re-encrypt (USER-approved
+  I2b-D1). This removes the API-30+ `UserNotAuthenticatedException` — but is **only provable on a physical device**.
+- **Biometric unlock is now OPT-IN (`33b1168`).** `masterKey.wrapped` exists ONLY when the user enables biometric
+  (`isBiometricEnabled()` == the file exists); vault creation never wraps. Password-only users are never prompted.
+  **Consequence for autofill:** autofill has no password UI, so it only works when biometric is opted in — the I2b
+  activities guard on `masterKey.wrapped` and cancel cleanly if absent (I2b-D2).
+- **Autofill "Enable" entry point (`30da929`/`8f23ec2`/`c753269`).** Native `AutofillManager` wrappers
+  (`Autofill.{isSupported,isEnabled,requestEnable}`, API-26 guarded) + a Settings row showing live **Active / Não
+  configurado** status + a skippable onboarding step. Flow is now welcome → set-password → recovery-code →
+  **biometric → autofill → drive-signin**. Note: Android autofill uses the **Autofill Framework** (NOT accessibility);
+  it's turned on via the OS picker (`ACTION_REQUEST_SET_AUTOFILL_SERVICE`), so there is no on-load permission prompt.
+
+Gates green at `c753269` (controller-verified): `pnpm test` **250/250** (48 suites), `pnpm run typecheck` **0**,
+`pnpm run lint` **0**, `:vaultsync-native:assembleDebug` SUCCESSFUL. `connectedAndroidTest` last ran **95/95** before
+this session's native changes (needs an emulator to re-run; not reachable this session).
+
+## ⏭️ NEXT WORK (with all considerations)
+
+### 1. On-device verification — TOP priority, the last gate before release
+Needs a **physical API-30+ device with enrolled biometrics + a screen lock**. The emulator does NOT enforce the
+auth-per-use key, so it CANNOT prove the I2 fix — a green emulator is not evidence here. Full step-by-step in
+**`docs/TESTING-autofill.md`**. Verify:
+- **I2b biometric (the make-or-break):** cold unlock fills; warm (≤5-min TTL) fills with no prompt; cold save = **1**
+  biometric prompt then confirm; warm save = 1 prompt at write; update-password + no-op cases; a **password-only vault
+  cancels cleanly** (no crash). **No `UserNotAuthenticatedException` in `adb logcat | grep -i VaultSync`** — a single
+  occurrence means I2 regressed and I2b goes back.
+- **Autofill enable entry point:** onboarding step and Settings row both open the OS picker; after selecting VaultSync
+  the **Settings row flips to "Ativo"** (this is the one bit only provable on-device); unsupported/opt-out paths behave.
+- **I2a UX (pre-approved, confirm it feels right):** a system biometric prompt now appears on onboarding first-wrap and
+  on every unlock.
+- **Carried device-checklist items (still open, all need the device):** real third-party-app fill (dataset popup,
+  unlock-then-fill, TTL expiry); save flow e2e with PT strings; autofill save → `sync_queue` row → JS foreground drain
+  → Drive push → re-decode round-trip; the Plan-4 multipart `Blob([head, Uint8Array, tail])` upload smoke (RN binary
+  Blob-part handling is the risk). `docs/manual-test-matrix.md` has the broader 21-scenario matrix.
+- **If all green:** the I2 ship-blocker is CLOSED and the autofill feature is verified → VaultSync v1 is ship-ready
+  pending the LWW decision (below).
+
+### 2. LWW / in-session live-reload — the next feature phase (deferred-by-design, P4-D1/P5-D2)
+Currently PULL is **cold-path only**: `syncOnce()` overwrites local `vault.enc` only when `status !== 'unlocked'`
+(validate-before-overwrite via `decodeVaultFile`), because overwriting an unlocked in-memory vault = data loss. So an
+autofill save (or a second device's edit) made while the main app stays unlocked is reverted by the next in-session
+`persistVault` — bounded by the 5-min auto-lock (unlock re-reads disk). Considerations for the phase:
+- True `updatedAt`-based last-write-wins + in-session live vault reload. `drive_last_upload_iso` is already written
+  after each push (the clean-LWW prerequisite).
+- **Interim hardening idea (smaller than the full phase):** `persistVault` compares on-disk `updatedAt` vs its load
+  baseline and reloads/merges on mismatch — closes the autofill-save-revert window without full live-reload.
+- This is the main remaining v1-quality gap; decide interim-hardening vs full-phase before/right-after release.
+
+### 3. Deferred minors / backlog (non-blocking; fold in when the relevant code is touched)
+- **Autofill:** `autofill_service.xml` `settingsActivity` points at `AutofillUnlockActivity` — now that an in-app
+  autofill settings screen exists (`app/(app)/settings/autofill.tsx`), consider pointing the OS "gear" there instead.
+  New autofill settings `check()` has no unmounted-guard (setState-after-unmount dev warning) — matches the existing
+  biometric-settings template, deferred for consistency. Demote the autofill miss-log `Log.i` (records visited
+  package/domain) to `Log.d` before ship. Spec §6.5 per-app "don't ask again" blocklist. Fallback
+  `SharedPreferences` timestamps unpruned; `key.hashCode()` id/reqcode collision.
+- **Vault/crypto hygiene:** in-app EntryForm password change doesn't write `previousPassword` (only the autofill save
+  does) — spec §3.1. `changeMasterPassword` doesn't zero old masterKey / re-derived candidate buffers on rotation (§4.7).
+- **Import:** Chrome-vs-LastPass detect label; no Secure-Note import in UI (by-design v1); `parseCsv` drops papaparse
+  errors; CSV plaintext passed through nav params; `rowsToEntries` computed twice on confirm.
+- **Sync:** "never synced" label when `status==='idle' && lastSyncedAt===null` (currently shows "Synced" pre-first-sync);
+  401-retry path untested (correct by inspection); no concurrent-`inFlight` test; layout test doesn't assert
+  `startSyncOnForeground` wiring.
+- Full running ledger with rationale: `.superpowers/sdd/progress.md`.
+
+> **The summary + Plan-1..6 sections below predate 2026-07-04 and are kept for provenance — the block above supersedes them.**
+
+---
+
 Plan 1 (crypto, vault format, native bindings, i18n), **Plan 2 (onboarding & unlock)**,
 **Plan 3 (vault CRUD, UI, password generator, settings, clipboard worker)**, and
 **Plan 4 (Google Drive file sync — push/pull)** are **complete** and **pushed to `origin/main`**
