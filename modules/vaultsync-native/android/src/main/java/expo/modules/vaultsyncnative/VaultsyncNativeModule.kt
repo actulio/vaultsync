@@ -220,6 +220,21 @@ class VaultsyncNativeModule : Module() {
       promise.resolve(null)
     }
 
+    val autofill = AutofillEnabler(appContext.reactContext!!)
+
+    AsyncFunction("isAutofillSupported") { promise: Promise ->
+      promise.resolve(autofill.isSupported())
+    }
+
+    AsyncFunction("isAutofillServiceEnabled") { promise: Promise ->
+      promise.resolve(autofill.isEnabled())
+    }
+
+    AsyncFunction("requestSetAutofillService") { promise: Promise ->
+      autofill.requestEnable(appContext.currentActivity)
+      promise.resolve(null)
+    }
+
     OnActivityResult { _, payload ->
       biometric.onActivityResult(payload.requestCode, payload.resultCode, payload.data)
     }
