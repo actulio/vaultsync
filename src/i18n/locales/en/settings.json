@@ -5,7 +5,16 @@
     "biometric": "Biometric unlock",
     "changePassword": "Change master password",
     "sync": "Google Drive sync",
-    "import": "Import CSV"
+    "import": "Import CSV",
+    "autofill": "Autofill"
+  },
+  "autofill": {
+    "title": "Autofill",
+    "body": "Fill saved logins in other apps and websites. Requires setting VaultSync as Android's autofill service.",
+    "statusActive": "Active",
+    "statusNotSet": "Not set up",
+    "ctaEnable": "Enable autofill",
+    "notSupported": "Autofill isn't supported on this device."
   },
   "biometric": {
     "title": "Biometric unlock",

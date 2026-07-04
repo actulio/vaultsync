@@ -5,7 +5,16 @@
     "biometric": "Desbloqueio por biometria",
     "changePassword": "Alterar senha mestre",
     "sync": "Sincronização Google Drive",
-    "import": "Importar CSV"
+    "import": "Importar CSV",
+    "autofill": "Autopreenchimento"
+  },
+  "autofill": {
+    "title": "Autopreenchimento",
+    "body": "Preencha logins salvos em outros apps e sites. Requer definir o VaultSync como serviço de autopreenchimento do Android.",
+    "statusActive": "Ativo",
+    "statusNotSet": "Não configurado",
+    "ctaEnable": "Ativar autopreenchimento",
+    "notSupported": "O autopreenchimento não é compatível com este dispositivo."
   },
   "biometric": {
     "title": "Desbloqueio por biometria",
