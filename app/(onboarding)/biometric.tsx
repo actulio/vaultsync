@@ -29,7 +29,7 @@ export default function BiometricEnroll(): JSX.Element {
         }
       }
     }
-    router.push('/(onboarding)/drive-signin');
+    router.push('/(onboarding)/autofill');
   };
 
   const styles = StyleSheet.create({
@@ -78,7 +78,7 @@ export default function BiometricEnroll(): JSX.Element {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('biometric.ctaSkip')}
-          onPress={() => router.push('/(onboarding)/drive-signin')}
+          onPress={() => router.push('/(onboarding)/autofill')}
           style={({ pressed }) => [styles.ctaSkip, { opacity: pressed ? 0.7 : 1 }]}
         >
           <Text style={styles.ctaSkipLabel}>{t('biometric.ctaSkip')}</Text>

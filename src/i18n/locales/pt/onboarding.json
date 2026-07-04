@@ -35,5 +35,11 @@
     "body": "O VaultSync sincroniza um arquivo criptografado na sua conta Google. Apenas este arquivo é visível para o app.",
     "ctaConnect": "Conectar Drive",
     "ctaSkip": "Conectar depois"
+  },
+  "autofill": {
+    "title": "Ativar autopreenchimento",
+    "body": "Deixe o VaultSync preencher seus logins em outros apps e sites. Você pode ativar agora ou depois nas Configurações.",
+    "ctaEnable": "Ativar",
+    "ctaSkip": "Agora não"
   }
 }

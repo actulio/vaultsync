@@ -35,5 +35,11 @@
     "body": "VaultSync syncs one encrypted file to your Google account. Only this file is visible to the app.",
     "ctaConnect": "Connect Drive",
     "ctaSkip": "Connect later"
+  },
+  "autofill": {
+    "title": "Enable autofill",
+    "body": "Let VaultSync fill your logins in other apps and websites. You can enable it now or later in Settings.",
+    "ctaEnable": "Enable",
+    "ctaSkip": "Not now"
   }
 }
