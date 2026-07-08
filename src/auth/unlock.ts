@@ -64,6 +64,16 @@ export async function unlockWithBiometric(): Promise<UnlockResult> {
   return { masterKey, vault };
 }
 
+/**
+ * Re-read and decrypt vault.enc with an already-held master key (no password/biometric).
+ * Used for in-session reload so an external write (e.g. an autofill save, which writes the
+ * encrypted file directly) can be picked up without re-deriving or re-unwrapping the key.
+ */
+export async function readVaultWithKey(masterKey: Uint8Array): Promise<VaultV1> {
+  const vaultBytes = await VaultStore.read('vault.enc');
+  return decryptVaultWithKey(masterKey, vaultBytes);
+}
+
 /** Read the password hint stored in vault header (no decryption needed). */
 export async function readVaultHint(): Promise<string> {
   const vaultBytes = await VaultStore.read('vault.enc');

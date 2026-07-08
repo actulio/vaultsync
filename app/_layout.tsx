@@ -9,6 +9,7 @@ import { ThemeProvider, useTheme } from '@/theme';
 import { startAutoLock } from '@/auth/autoLock';
 import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
+import { startVaultReloadOnForeground } from '@/auth/foregroundReload';
 
 function ThemedRoot(): JSX.Element {
   const { colors } = useTheme();
@@ -45,6 +46,9 @@ export default function RootLayout(): JSX.Element {
   }, []);
 
   useEffect(() => startSyncOnForeground(), []);
+
+  // Pick up out-of-band writes (e.g. an autofill save) on foreground without a relaunch.
+  useEffect(() => startVaultReloadOnForeground(), []);
 
   return (
     <SafeAreaProvider>

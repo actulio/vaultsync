@@ -26,6 +26,10 @@ jest.mock('@/sync/hooks', () => ({
   startSyncOnForeground: jest.fn(() => () => {}),
 }));
 
+jest.mock('@/auth/foregroundReload', () => ({
+  startVaultReloadOnForeground: jest.fn(() => () => {}),
+}));
+
 function getStartAutoLock() {
   return jest.requireMock<{ startAutoLock: jest.Mock }>('@/auth/autoLock').startAutoLock;
 }
