@@ -95,19 +95,22 @@ describe('Unlock screen', () => {
     expect(await findByText('Senha incorreta')).toBeTruthy();
   });
 
-  it('renders the biometric CTA button when biometric unlock is enabled', async () => {
-    const { findByText } = await render(<Unlock />);
-    expect(await findByText('Usar biometria')).toBeTruthy();
+  it('renders the biometric icon button (by accessibilityLabel) when biometric unlock is enabled', async () => {
+    const { findByLabelText, queryByText } = await render(<Unlock />);
+    expect(await findByLabelText('Usar biometria')).toBeTruthy();
+    // Icon-only: the biometric control must not render its label as visible text
+    // (that would be the old full-width button, not the compact icon button).
+    expect(queryByText('Usar biometria')).toBeNull();
   });
 
-  it('hides the biometric CTA when biometric unlock is disabled (opt-in)', async () => {
+  it('hides the biometric icon button when biometric unlock is disabled (opt-in)', async () => {
     const bio = jest.requireMock<{ isBiometricEnabled: jest.Mock }>('@/auth/biometric');
     bio.isBiometricEnabled.mockResolvedValueOnce(false);
 
-    const { queryByText, findByText } = await render(<Unlock />);
+    const { queryByLabelText, findByText } = await render(<Unlock />);
     // Wait for the screen to settle (the password CTA is always present).
     await findByText('Desbloquear');
-    expect(queryByText('Usar biometria')).toBeNull();
+    expect(queryByLabelText('Usar biometria')).toBeNull();
   });
 
   it('renders forgot password link', async () => {
@@ -122,8 +125,8 @@ describe('Unlock screen', () => {
     );
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 
-    const { findByText } = await render(<Unlock />);
-    const biometricBtn = await findByText('Usar biometria');
+    const { findByLabelText } = await render(<Unlock />);
+    const biometricBtn = await findByLabelText('Usar biometria');
     void fireEvent.press(biometricBtn);
 
     await waitFor(() => expect(alertSpy).toHaveBeenCalled());

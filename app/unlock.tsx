@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Fingerprint } from 'lucide-react-native';
 import {
   unlockWithPassword,
   unlockWithBiometric,
@@ -86,6 +87,15 @@ export default function Unlock(): JSX.Element {
       marginTop: spacing['2xl'],
     },
     ctaLabel: { ...type.bodyStrong, color: colors.onPrimary },
+    unlockRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.md },
+    unlockCta: { flex: 1 },
+    biometricIconBtn: {
+      aspectRatio: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radii.md,
+      backgroundColor: colors.surfaceAlt,
+    },
     label: { ...type.subhead, color: colors.textSecondary, marginTop: spacing['2xl'] },
     input: {
       height: 52,
@@ -114,17 +124,6 @@ export default function Unlock(): JSX.Element {
     >
       <Text style={styles.title}>{t('unlock.title')}</Text>
 
-      {biometricEnabled && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('unlock.biometricCta')}
-          onPress={() => { void onBiometric(); }}
-          style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
-        >
-          <Text style={styles.ctaLabel}>{t('unlock.biometricCta')}</Text>
-        </Pressable>
-      )}
-
       <Text style={styles.label}>{t('unlock.passwordLabel')}</Text>
       <TextInput
         style={[styles.input, pwFocused && styles.inputFocused]}
@@ -141,14 +140,26 @@ export default function Unlock(): JSX.Element {
 
       {error !== null && <Text style={styles.errorText}>{error}</Text>}
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('unlock.passwordCta')}
-        onPress={() => { void onPasswordSubmit(); }}
-        style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
-      >
-        <Text style={styles.ctaLabel}>{t('unlock.passwordCta')}</Text>
-      </Pressable>
+      <View style={styles.unlockRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('unlock.passwordCta')}
+          onPress={() => { void onPasswordSubmit(); }}
+          style={({ pressed }) => [styles.cta, styles.unlockCta, { opacity: pressed ? 0.85 : 1 }]}
+        >
+          <Text style={styles.ctaLabel}>{t('unlock.passwordCta')}</Text>
+        </Pressable>
+        {biometricEnabled && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('unlock.biometricCta')}
+            onPress={() => { void onBiometric(); }}
+            style={({ pressed }) => [styles.biometricIconBtn, { opacity: pressed ? 0.85 : 1 }]}
+          >
+            <Fingerprint color={colors.primary} size={20} />
+          </Pressable>
+        )}
+      </View>
 
       {hint.length > 0 && (
         <Pressable
