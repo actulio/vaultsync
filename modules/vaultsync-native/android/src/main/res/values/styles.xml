@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Dependency-free brand theme for the autofill save confirmation dialog.
+       Framework Material dialog (no appcompat) with brand-accent buttons and a
+       rounded surface. Dark variant in values-night/styles.xml. -->
+  <style name="VaultSyncDialog" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+    <item name="android:colorAccent">@color/vaultsync_dialog_accent</item>
+    <item name="android:windowBackground">@drawable/vaultsync_dialog_bg</item>
+  </style>
+</resources>

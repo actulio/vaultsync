@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Brand tokens mirrored from src/theme/tokens.ts (dark). -->
+  <color name="vaultsync_dialog_bg">#161A21</color>
+  <color name="vaultsync_dialog_accent">#5C7CFA</color>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Dark variant: dark Material dialog base; brand accent + rounded surface
+       resolve to the values-night color set automatically. -->
+  <style name="VaultSyncDialog" parent="@android:style/Theme.Material.Dialog.Alert">
+    <item name="android:colorAccent">@color/vaultsync_dialog_accent</item>
+    <item name="android:windowBackground">@drawable/vaultsync_dialog_bg</item>
+  </style>
+</resources>

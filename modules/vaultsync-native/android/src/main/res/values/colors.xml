@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Brand tokens mirrored from src/theme/tokens.ts (light). Used only by the
+       autofill save confirmation dialog theme (VaultSyncDialog). -->
+  <color name="vaultsync_dialog_bg">#FFFFFF</color>
+  <color name="vaultsync_dialog_accent">#3B5BDB</color>
+</resources>

@@ -156,10 +156,11 @@ class AutofillSaveActivity : FragmentActivity() {
   }
 
   private fun confirm(title: String, message: String, actionLabel: String, onConfirm: () -> Unit) {
-    // Framework AlertDialog (no appcompat dep). Compose polish is out of v1 scope.
-    // The positive button only kicks off onConfirm — the write path owns finish() (the warm-save
-    // write is async once it goes through a fresh biometric prompt, so finishing here would race).
-    AlertDialog.Builder(this)
+    // Framework AlertDialog (no appcompat dep) themed with VaultSyncDialog: brand-accent buttons +
+    // rounded surface, light/dark via res/values(-night). The positive button only kicks off
+    // onConfirm — the write path owns finish() (the warm-save write is async once it goes through a
+    // fresh biometric prompt, so finishing here would race).
+    AlertDialog.Builder(this, R.style.VaultSyncDialog)
       .setTitle(title)
       .setMessage(message)
       .setPositiveButton(actionLabel) { _, _ -> onConfirm() }
