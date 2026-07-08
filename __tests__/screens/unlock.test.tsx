@@ -131,4 +131,19 @@ describe('Unlock screen', () => {
 
     await waitFor(() => expect(alertSpy).toHaveBeenCalled());
   });
+
+  it('unlocks and navigates to the app when biometric prompt succeeds', async () => {
+    (Biometric.prompt as jest.Mock).mockResolvedValueOnce('success');
+    (unlockWithBiometric as jest.Mock).mockResolvedValueOnce({
+      masterKey: new Uint8Array(32),
+      vault: { version: 1, entries: [], updatedAt: '', deviceId: '' },
+    });
+    const { router } = jest.requireMock<{ router: { replace: jest.Mock } }>('expo-router');
+
+    const { findByLabelText } = await render(<Unlock />);
+    const biometricBtn = await findByLabelText('Usar biometria');
+    void fireEvent.press(biometricBtn);
+
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/(app)/(tabs)'));
+  });
 });

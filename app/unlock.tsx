@@ -156,7 +156,7 @@ export default function Unlock(): JSX.Element {
             onPress={() => { void onBiometric(); }}
             style={({ pressed }) => [styles.biometricIconBtn, { opacity: pressed ? 0.85 : 1 }]}
           >
-            <Fingerprint color={colors.primary} size={20} />
+            <Fingerprint color={colors.textPrimary} size={spacing.xl} />
           </Pressable>
         )}
       </View>
