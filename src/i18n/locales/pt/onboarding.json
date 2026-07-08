@@ -20,6 +20,7 @@
     "body": "Anote este código em papel ou em um local físico seguro. Se você esquecer sua senha mestre, este é o único modo de recuperar o vaultsync.",
     "warning": "Não tire um screenshot. Não salve em um arquivo no celular.",
     "copy": "Copiar",
+    "copied": "Código de recuperação copiado",
     "savedCheckbox": "Confirmo que salvei este código com segurança",
     "cta": "Continuar"
   },

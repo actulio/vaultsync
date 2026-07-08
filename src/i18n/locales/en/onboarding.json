@@ -20,6 +20,7 @@
     "body": "Write this down on paper or in a physically safe place. If you forget your master password, this is the only way to recover your vault.",
     "warning": "Don't screenshot. Don't save in a file on this phone.",
     "copy": "Copy",
+    "copied": "Recovery code copied",
     "savedCheckbox": "I confirm I have saved this code safely",
     "cta": "Continue"
   },

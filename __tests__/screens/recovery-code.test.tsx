@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import RecoveryCode from '../../app/(onboarding)/recovery-code';
 
@@ -13,6 +14,10 @@ jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }
 
 function getRouter() {
   return jest.requireMock<{ router: { push: jest.Mock; replace: jest.Mock } }>('expo-router').router;
+}
+
+function getClipboard() {
+  return jest.requireMock<{ setStringAsync: jest.Mock }>('expo-clipboard');
 }
 
 beforeEach(() => {
@@ -33,6 +38,33 @@ describe('RecoveryCode', () => {
   it('shows the code', async () => {
     const { getByText } = await render(<RecoveryCode />);
     expect(getByText('AAAA-BBBB-CCCC-DDDD-EEEE-FFFF')).toBeTruthy();
+  });
+
+  it('copy control: copies the code to clipboard and shows a confirmation alert', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    const { getByRole } = await render(<RecoveryCode />);
+
+    await fireEvent.press(getByRole('button', { name: 'Copiar' }));
+
+    await waitFor(() => {
+      expect(getClipboard().setStringAsync).toHaveBeenCalledWith('AAAA-BBBB-CCCC-DDDD-EEEE-FFFF');
+      expect(alertSpy).toHaveBeenCalledWith('Código de recuperação copiado');
+    });
+
+    alertSpy.mockRestore();
+  });
+
+  it('copy control: does nothing when there is no code', async () => {
+    mockParams = {};
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    const { getByRole } = await render(<RecoveryCode />);
+
+    await fireEvent.press(getByRole('button', { name: 'Copiar' }));
+
+    expect(getClipboard().setStringAsync).not.toHaveBeenCalled();
+    expect(alertSpy).not.toHaveBeenCalled();
+
+    alertSpy.mockRestore();
   });
 
   it('onboarding path: CTA pushes to biometric (no from param)', async () => {

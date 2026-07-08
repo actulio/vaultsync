@@ -1,5 +1,5 @@
 import { useState, type JSX } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,12 @@ export default function RecoveryCode(): JSX.Element {
   const { colors, spacing, radii, type } = useTheme();
   const { code, from } = useLocalSearchParams<{ code: string; from?: string }>();
   const [confirmed, setConfirmed] = useState(false);
+
+  async function handleCopy(): Promise<void> {
+    if (!code) return;
+    await Clipboard.setStringAsync(code);
+    Alert.alert(t('recoveryCode.copied'));
+  }
 
   const styles = StyleSheet.create({
     scroll: { flex: 1, backgroundColor: colors.bg },
@@ -82,7 +88,7 @@ export default function RecoveryCode(): JSX.Element {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('recoveryCode.copy')}
-        onPress={() => void Clipboard.setStringAsync(code ?? '')}
+        onPress={() => void handleCopy()}
         style={styles.copyBtn}
       >
         <Text style={styles.copyLabel}>{t('recoveryCode.copy')}</Text>
