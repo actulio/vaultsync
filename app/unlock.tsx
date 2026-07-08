@@ -23,7 +23,7 @@ import { useTheme } from '@/theme';
 
 export default function Unlock(): JSX.Element {
   const { t } = useTranslation('auth');
-  const { colors, spacing, radii, type } = useTheme();
+  const { colors, spacing, radii, type, sizes } = useTheme();
 
   const [pw, setPw] = useState('');
   const [pwFocused, setPwFocused] = useState(false);
@@ -87,10 +87,11 @@ export default function Unlock(): JSX.Element {
       marginTop: spacing['2xl'],
     },
     ctaLabel: { ...type.bodyStrong, color: colors.onPrimary },
-    unlockRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.md },
-    unlockCta: { flex: 1 },
+    unlockRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing['2xl'] },
+    unlockCta: { flex: 1, marginTop: 0 },
     biometricIconBtn: {
-      aspectRatio: 1,
+      width: sizes.control,
+      height: sizes.control,
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: radii.md,
