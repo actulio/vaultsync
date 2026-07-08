@@ -7,6 +7,7 @@ import android.service.autofill.SaveInfo
 import android.view.autofill.AutofillId
 import android.view.autofill.AutofillValue
 import android.widget.RemoteViews
+import expo.modules.vaultsyncnative.R
 
 /**
  * Shared dataset construction, used by BOTH the warm-cache fill path
@@ -24,9 +25,12 @@ object AutofillResponses {
   ): FillResponse {
     val b = FillResponse.Builder()
     for (e in matches) {
-      val rv = RemoteViews(context.packageName, android.R.layout.simple_list_item_2).apply {
-        setTextViewText(android.R.id.text1, e.title)
-        setTextViewText(android.R.id.text2, e.username)
+      // Custom layout (LinearLayout + TextViews). The framework simple_list_item_2 root is
+      // TwoLineListItem, which the system RemoteViews inflater rejects ("Class not allowed to be
+      // inflated"), crashing FillUi and blocking the fill entirely.
+      val rv = RemoteViews(context.packageName, R.layout.autofill_dataset).apply {
+        setTextViewText(R.id.autofill_dataset_title, e.title)
+        setTextViewText(R.id.autofill_dataset_subtitle, e.username)
       }
       val ds = Dataset.Builder(rv)
       datasetValues(detected, e).forEach { (id, value) -> ds.setValue(id, AutofillValue.forText(value)) }
