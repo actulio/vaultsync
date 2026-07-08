@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { PasswordGenerator } from '@/generator/PasswordGenerator';
@@ -27,28 +27,43 @@ export default function GeneratorScreen(): JSX.Element {
       padding: spacing.lg,
     },
     copyBtn: {
+      flexDirection: 'row',
       height: sizes.control,
       backgroundColor: colors.surfaceAlt,
       borderRadius: radii.lg,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: spacing.sm,
       marginTop: spacing.lg,
+    },
+    copyBtnIcon: {
+      color: colors.textPrimary,
     },
     copyBtnText: {
       color: colors.textPrimary,
     },
   });
 
+  const copyLabel = t('detail.copy');
+
+  const copy = async (): Promise<void> => {
+    if (pw === '') return;
+    await copyAndScheduleClear(pw, 30);
+    Alert.alert(t('generator.copied'));
+  };
+
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <PasswordGenerator onChange={setPw} />
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={copyLabel}
         style={styles.copyBtn}
         disabled={pw === ''}
-        onPress={() => { if (pw !== '') void copyAndScheduleClear(pw, 30); }}
+        onPress={() => { void copy(); }}
       >
-        <Text style={styles.copyBtnText}>{t('detail.copy')}</Text>
+        <Text style={styles.copyBtnIcon} accessibilityLabel={copyLabel} testID="generator-copy-icon">⧉</Text>
+        <Text style={styles.copyBtnText}>{copyLabel}</Text>
       </Pressable>
     </ScrollView>
   );

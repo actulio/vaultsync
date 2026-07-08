@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import GeneratorScreen from '../../app/(app)/(tabs)/generator';
 
@@ -161,6 +162,33 @@ describe('GeneratorScreen', () => {
 
     await fireEvent.press(screen.getByText('Copiar'));
     expect(copyMock).not.toHaveBeenCalled();
+  });
+
+  it('pressing Copiar shows a copied confirmation alert', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    await render(<GeneratorScreen />);
+    await waitFor(() => {
+      expect(screen.getByText('MockedPw-1234-AbCd')).toBeTruthy();
+    });
+
+    const copyBtn = screen.getByText('Copiar');
+    await fireEvent.press(copyBtn);
+
+    await waitFor(() => {
+      expect(getCopyMock()).toHaveBeenCalledWith('MockedPw-1234-AbCd', 30);
+      expect(alertSpy).toHaveBeenCalledWith('Senha copiada');
+    });
+
+    alertSpy.mockRestore();
+  });
+
+  it('renders a copy icon inside the Copy control', async () => {
+    await render(<GeneratorScreen />);
+    await waitFor(() => {
+      expect(screen.getByText('MockedPw-1234-AbCd')).toBeTruthy();
+    });
+
+    expect(screen.getByTestId('generator-copy-icon')).toBeTruthy();
   });
 
   it('toggling a class Switch triggers generatePassword again (opts change)', async () => {

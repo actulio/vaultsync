@@ -44,6 +44,7 @@
     "lower": "Minúsculas (a–z)",
     "upper": "Maiúsculas (A–Z)",
     "digits": "Números (0–9)",
-    "symbols": "Símbolos (!@#)"
+    "symbols": "Símbolos (!@#)",
+    "copied": "Senha copiada"
   }
 }

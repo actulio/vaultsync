@@ -44,6 +44,7 @@
     "lower": "Lowercase (a–z)",
     "upper": "Uppercase (A–Z)",
     "digits": "Numbers (0–9)",
-    "symbols": "Symbols (!@#)"
+    "symbols": "Symbols (!@#)",
+    "copied": "Password copied"
   }
 }
