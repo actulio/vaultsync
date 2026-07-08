@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.CancellationSignal
 import android.service.autofill.AutofillService
-import android.service.autofill.Dataset
 import android.service.autofill.FillCallback
 import android.service.autofill.FillRequest
 import android.service.autofill.FillResponse
@@ -15,7 +14,6 @@ import android.service.autofill.SaveInfo
 import android.service.autofill.SaveRequest
 import android.util.Log
 import android.view.autofill.AutofillId
-import android.view.autofill.AutofillValue
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import expo.modules.vaultsyncnative.R
@@ -41,7 +39,7 @@ class VaultAutofillService : AutofillService() {
 
     val cache = VaultCacheHolder.instance.get()
     if (cache == null) {
-      cb.onSuccess(buildUnlockResponse(detected))
+      cb.onSuccess(buildUnlockResponse(detected, packageName, webDomain))
       return
     }
 
@@ -107,13 +105,26 @@ class VaultAutofillService : AutofillService() {
   private fun firstRoot(structure: AssistStructure): AssistStructure.ViewNode? =
     if (structure.windowNodeCount > 0) structure.getWindowNodeAt(0).rootViewNode else null
 
-  private fun buildUnlockResponse(detected: DetectedFields): FillResponse {
-    val intent = Intent(this, AutofillUnlockActivity::class.java)
+  private fun buildUnlockResponse(
+    detected: DetectedFields,
+    packageName: String?,
+    webDomain: String?,
+  ): FillResponse {
+    // NB: the `packageName` param above (the detected foreground app's package, passed through as
+    // an intent extra) shadows the Context.packageName property (this service's own package,
+    // needed below for RemoteViews' resource-owning package) — so the RemoteViews call below
+    // qualifies with `this.packageName` to keep referring to the latter.
+    val intent = Intent(this, AutofillUnlockActivity::class.java).apply {
+      putExtra("usernameId", detected.usernameId) // AutofillId is Parcelable
+      putExtra("passwordId", detected.passwordId)
+      putExtra("packageName", packageName)
+      putExtra("webDomain", webDomain)
+    }
     val pi = PendingIntent.getActivity(
       this, 1, intent,
       PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_MUTABLE,
     )
-    val rv = RemoteViews(packageName, android.R.layout.simple_list_item_1).apply {
+    val rv = RemoteViews(this.packageName, android.R.layout.simple_list_item_1).apply {
       setTextViewText(android.R.id.text1, getString(R.string.autofill_unlock))
     }
     val ids = listOfNotNull(detected.usernameId, detected.passwordId).toTypedArray()
@@ -136,22 +147,11 @@ class VaultAutofillService : AutofillService() {
     return SaveInfo.Builder(type, saveIds).build()
   }
 
-  private fun buildFillResponse(detected: DetectedFields, matches: List<EntryView>): FillResponse {
-    val b = FillResponse.Builder()
-    for (e in matches) {
-      val rv = RemoteViews(packageName, android.R.layout.simple_list_item_2).apply {
-        setTextViewText(android.R.id.text1, e.title)
-        setTextViewText(android.R.id.text2, e.username)
-      }
-      val ds = Dataset.Builder(rv)
-      detected.usernameId?.let { ds.setValue(it, AutofillValue.forText(e.username)) }
-      ds.setValue(detected.passwordId, AutofillValue.forText(e.password))
-      b.addDataset(ds.build())
-    }
-    // SaveInfo so Android calls onSaveRequest later when the user submits new/changed credentials.
-    b.setSaveInfo(buildSaveInfo(detected))
-    return b.build()
-  }
+  // SaveInfo attached so Android calls onSaveRequest later when the user submits new/changed
+  // credentials. Delegates dataset construction to AutofillResponses, the single source shared
+  // with the post-unlock path (AutofillUnlockActivity).
+  private fun buildFillResponse(detected: DetectedFields, matches: List<EntryView>): FillResponse =
+    AutofillResponses.buildDatasets(this, detected, matches, buildSaveInfo(detected))
 
   private fun postNoMatchNotification(packageName: String?, webDomain: String?) {
     // Defensive: notifyMiss touches NotificationManager/PendingIntent, which can throw on odd

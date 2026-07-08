@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.service.autofill.FillResponse
 import android.util.Log
+import android.view.autofill.AutofillId
 import android.view.autofill.AutofillManager
 import androidx.fragment.app.FragmentActivity
 import expo.modules.vaultsyncnative.R
@@ -12,8 +13,14 @@ import expo.modules.vaultsyncnative.VaultIO
 
 /**
  * Biometric-gated unlock triggered by [FillResponse.setAuthentication]. On success it decrypts the
- * vault, primes [VaultCacheHolder], and returns an (empty) authentication result so the platform
- * re-issues the fill request — which now hits the warm cache.
+ * vault, primes [VaultCacheHolder], and returns a POPULATED [FillResponse] built from the
+ * just-decrypted vault via [AutofillManager.EXTRA_AUTHENTICATION_RESULT].
+ *
+ * Android applies that result directly — it does NOT re-issue [android.service.autofill.AutofillService.onFillRequest]
+ * after authentication — so an empty response here means nothing fills. The AutofillIds plus the
+ * detected package/web-domain are threaded in via intent extras set by
+ * [VaultAutofillService.buildUnlockResponse], letting this activity rebuild [DetectedFields] and
+ * re-run [Matcher] against the now-decrypted entries without a second fill request.
  *
  * Biometric contract: a CryptoObject-bound BiometricPrompt via [authenticateAndUnwrapMasterKey],
  * mirroring the app's production hot-unlock path (VaultsyncNativeModule.authenticateCipher, I2a).
@@ -36,8 +43,18 @@ class AutofillUnlockActivity : FragmentActivity() {
             masterKey,
           )
           VaultCacheHolder.instance.put(view)
+          val detected = DetectedFields(
+            intent.getParcelableExtra<AutofillId>("usernameId"),
+            intent.getParcelableExtra<AutofillId>("passwordId")!!,
+          )
+          val matches = Matcher().match(
+            view.entries,
+            intent.getStringExtra("packageName"),
+            intent.getStringExtra("webDomain"),
+          )
+          val response = AutofillResponses.buildDatasets(applicationContext, detected, matches, null)
           val replyIntent = Intent().apply {
-            putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, FillResponse.Builder().build())
+            putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, response)
           }
           setResult(Activity.RESULT_OK, replyIntent)
         } catch (e: Exception) {
