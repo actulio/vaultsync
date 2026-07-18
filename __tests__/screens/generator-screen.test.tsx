@@ -1,7 +1,12 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { showToast } from '@/components/toast';
 import GeneratorScreen from '../../app/(app)/(tabs)/generator';
+
+jest.mock('@/components/toast', () => ({
+  showToast: jest.fn(),
+  VaultToast: () => null,
+}));
 
 // -----------------------------------------------------------------------
 // Mocks — factories must be self-contained (no out-of-scope references)
@@ -164,8 +169,7 @@ describe('GeneratorScreen', () => {
     expect(copyMock).not.toHaveBeenCalled();
   });
 
-  it('pressing Copiar shows a copied confirmation alert', async () => {
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  it('pressing Copiar shows a copied confirmation toast', async () => {
     await render(<GeneratorScreen />);
     await waitFor(() => {
       expect(screen.getByText('MockedPw-1234-AbCd')).toBeTruthy();
@@ -176,10 +180,8 @@ describe('GeneratorScreen', () => {
 
     await waitFor(() => {
       expect(getCopyMock()).toHaveBeenCalledWith('MockedPw-1234-AbCd', 30);
-      expect(alertSpy).toHaveBeenCalledWith('Senha copiada');
+      expect(showToast).toHaveBeenCalledWith('Senha copiada');
     });
-
-    alertSpy.mockRestore();
   });
 
   it('renders a copy icon inside the Copy control', async () => {

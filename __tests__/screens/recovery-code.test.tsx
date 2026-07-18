@@ -1,6 +1,6 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { showToast } from '@/components/toast';
 import RecoveryCode from '../../app/(onboarding)/recovery-code';
 
 let mockParams: Record<string, string> = { code: 'AAAA-BBBB-CCCC-DDDD-EEEE-FFFF' };
@@ -11,6 +11,11 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
+
+jest.mock('@/components/toast', () => ({
+  showToast: jest.fn(),
+  VaultToast: () => null,
+}));
 
 function getRouter() {
   return jest.requireMock<{ router: { push: jest.Mock; replace: jest.Mock } }>('expo-router').router;
@@ -40,31 +45,25 @@ describe('RecoveryCode', () => {
     expect(getByText('AAAA-BBBB-CCCC-DDDD-EEEE-FFFF')).toBeTruthy();
   });
 
-  it('copy control: copies the code to clipboard and shows a confirmation alert', async () => {
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  it('copy control: copies the code to clipboard and shows a confirmation toast', async () => {
     const { getByRole } = await render(<RecoveryCode />);
 
     await fireEvent.press(getByRole('button', { name: 'Copiar' }));
 
     await waitFor(() => {
       expect(getClipboard().setStringAsync).toHaveBeenCalledWith('AAAA-BBBB-CCCC-DDDD-EEEE-FFFF');
-      expect(alertSpy).toHaveBeenCalledWith('Código de recuperação copiado');
+      expect(showToast).toHaveBeenCalledWith('Código de recuperação copiado');
     });
-
-    alertSpy.mockRestore();
   });
 
   it('copy control: does nothing when there is no code', async () => {
     mockParams = {};
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     const { getByRole } = await render(<RecoveryCode />);
 
     await fireEvent.press(getByRole('button', { name: 'Copiar' }));
 
     expect(getClipboard().setStringAsync).not.toHaveBeenCalled();
-    expect(alertSpy).not.toHaveBeenCalled();
-
-    alertSpy.mockRestore();
+    expect(showToast).not.toHaveBeenCalled();
   });
 
   it('onboarding path: CTA pushes to biometric (no from param)', async () => {

@@ -1,8 +1,9 @@
 import { useState, type JSX } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { showToast } from '@/components/toast';
 import { useTheme } from '@/theme';
 
 export default function RecoveryCode(): JSX.Element {
@@ -14,7 +15,7 @@ export default function RecoveryCode(): JSX.Element {
   async function handleCopy(): Promise<void> {
     if (!code) return;
     await Clipboard.setStringAsync(code);
-    Alert.alert(t('recoveryCode.copied'));
+    showToast(t('recoveryCode.copied'));
   }
 
   const styles = StyleSheet.create({

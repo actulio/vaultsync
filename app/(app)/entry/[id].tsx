@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
 import { copyAndScheduleClear } from '@/native/clipboardWorker';
+import { showToast } from '@/components/toast';
 import { persistVault } from '@/vault/persist';
 import { deleteEntry } from '@/vault/mutations';
 
@@ -145,7 +146,7 @@ export default function EntryDetail(): JSX.Element {
 
   const copy = async (text: string): Promise<void> => {
     await copyAndScheduleClear(text, 30);
-    Alert.alert(t('detail.copied'));
+    showToast(t('detail.copied'));
   };
 
   const doDelete = async (): Promise<void> => {

@@ -1,10 +1,11 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { PasswordGenerator } from '@/generator/PasswordGenerator';
 import { copyAndScheduleClear } from '@/native/clipboardWorker';
+import { showToast } from '@/components/toast';
 import { useTheme } from '@/theme';
 
 // ---------------------------------------------------------------------------
@@ -49,7 +50,7 @@ export default function GeneratorScreen(): JSX.Element {
   const copy = async (): Promise<void> => {
     if (pw === '') return;
     await copyAndScheduleClear(pw, 30);
-    Alert.alert(t('generator.copied'));
+    showToast(t('generator.copied'));
   };
 
   return (
