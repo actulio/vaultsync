@@ -89,6 +89,7 @@ export function Dialog({
             {buttons.map((b) => (
               <Pressable
                 key={b.label}
+                testID={`dialog-button-${b.variant}`}
                 accessibilityRole="button"
                 onPress={b.onPress}
                 style={({ pressed }) => [

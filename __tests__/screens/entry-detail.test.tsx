@@ -104,10 +104,9 @@ describe('EntryDetail', () => {
     const deleteBtn = screen.getByText('Excluir');
     await fireEvent.press(deleteBtn);
 
-    // Confirm via the dialog's destructive button (also labeled "Excluir").
-    const confirmBtns = await screen.findAllByText('Excluir');
-    const confirmBtn = confirmBtns[confirmBtns.length - 1];
-    if (!confirmBtn) throw new Error('No confirm button found');
+    // Confirm via the dialog's destructive button, addressed by testID rather than
+    // text position — the screen's own "Excluir" button shares the same label.
+    const confirmBtn = await screen.findByTestId('dialog-button-destructive');
     await fireEvent.press(confirmBtn);
 
     await waitFor(() => {
