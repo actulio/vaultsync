@@ -1,4 +1,5 @@
 import React from 'react';
+import type { JSX } from 'react';
 import { render } from '@testing-library/react-native';
 import Toast from 'react-native-toast-message';
 import { ThemeProvider } from '@/theme';
@@ -22,7 +23,31 @@ describe('toast', () => {
         <VaultToast />
       </ThemeProvider>,
     );
-    expect(toJSON()).toMatchObject({ type: 'VaultToastHost' });
+    const tree = toJSON() as unknown as {
+      type: string;
+      props: { config: { vaultToast: (props: { text1?: string }) => JSX.Element } };
+    };
+    expect(tree).toMatchObject({ type: 'VaultToastHost' });
+    expect(typeof tree.props.config.vaultToast).toBe('function');
+  });
+
+  it('the vaultToast renderer produces the alert body with the message text', async () => {
+    const { toJSON: hostToJSON } = await render(
+      <ThemeProvider>
+        <VaultToast />
+      </ThemeProvider>,
+    );
+    const tree = hostToJSON() as unknown as {
+      props: { config: { vaultToast: (props: { text1?: string }) => JSX.Element } };
+    };
+    const { vaultToast } = tree.props.config;
+
+    const { findByText, toJSON: bodyToJSON } = await render(
+      <ThemeProvider>{vaultToast({ text1: 'Copiado!' })}</ThemeProvider>,
+    );
+
+    expect(await findByText('Copiado!')).toBeTruthy();
+    expect(bodyToJSON()).toMatchObject({ props: { accessibilityRole: 'alert' } });
   });
 
   it('showToast forwards the message to the library', () => {
