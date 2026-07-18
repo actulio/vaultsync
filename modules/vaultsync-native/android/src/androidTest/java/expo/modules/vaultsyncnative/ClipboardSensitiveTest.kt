@@ -30,4 +30,18 @@ class ClipboardSensitiveTest {
       }
     assertTrue(clip.description.extras!!.getBoolean(key))
   }
+
+  @Test
+  fun clearNow_removesTheCopiedValue() {
+    val ctx = ApplicationProvider.getApplicationContext<Context>()
+    val mod = ClipboardModule(ctx)
+    mod.copySensitive("hunter2")
+    mod.clearNow()
+
+    val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = cm.primaryClip
+    val current =
+      if (clip != null && clip.itemCount > 0) clip.getItemAt(0)?.text?.toString() else null
+    assertTrue(current == null || current.isEmpty())
+  }
 }

@@ -30,6 +30,10 @@ jest.mock('@/auth/foregroundReload', () => ({
   startVaultReloadOnForeground: jest.fn(() => () => {}),
 }));
 
+jest.mock('@/native/clipboardWorker', () => ({
+  startClipboardClearOnForeground: jest.fn(() => () => {}),
+}));
+
 function getStartAutoLock() {
   return jest.requireMock<{ startAutoLock: jest.Mock }>('@/auth/autoLock').startAutoLock;
 }

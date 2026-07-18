@@ -10,6 +10,7 @@ import { startAutoLock } from '@/auth/autoLock';
 import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
 import { startVaultReloadOnForeground } from '@/auth/foregroundReload';
+import { startClipboardClearOnForeground } from '@/native/clipboardWorker';
 import { VaultToast } from '@/components/toast';
 import { DialogProvider } from '@/components/DialogProvider';
 
@@ -52,6 +53,10 @@ export default function RootLayout(): JSX.Element {
 
   // Pick up out-of-band writes (e.g. an autofill save) on foreground without a relaunch.
   useEffect(() => startVaultReloadOnForeground(), []);
+
+  // Android only lets the focused app touch the clipboard, so a copied secret can
+  // only actually be wiped while we are in the foreground.
+  useEffect(() => startClipboardClearOnForeground(), []);
 
   return (
     <SafeAreaProvider>
