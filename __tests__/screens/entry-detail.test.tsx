@@ -90,7 +90,8 @@ describe('EntryDetail', () => {
     }>('@/native/clipboardWorker');
 
     await waitFor(() => {
-      expect(copyAndScheduleClear).toHaveBeenCalledWith('me', 30);
+      // No explicit duration: the call site defers to CLIPBOARD_CLEAR_SECONDS.
+      expect(copyAndScheduleClear).toHaveBeenCalledWith('me');
     });
   });
 

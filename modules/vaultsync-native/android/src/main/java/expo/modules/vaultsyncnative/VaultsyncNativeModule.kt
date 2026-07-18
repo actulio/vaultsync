@@ -220,6 +220,11 @@ class VaultsyncNativeModule : Module() {
       promise.resolve(null)
     }
 
+    AsyncFunction("copyToClipboard") { text: String, promise: Promise ->
+      clipboard.copySensitive(text)
+      promise.resolve(null)
+    }
+
     val autofill = AutofillEnabler(appContext.reactContext!!)
 
     AsyncFunction("isAutofillSupported") { promise: Promise ->

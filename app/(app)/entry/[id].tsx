@@ -147,7 +147,7 @@ export default function EntryDetail(): JSX.Element {
   const copyLabel = t('detail.copy');
 
   const copy = async (text: string): Promise<void> => {
-    await copyAndScheduleClear(text, 30);
+    await copyAndScheduleClear(text);
     showToast(t('detail.copied'));
   };
 
