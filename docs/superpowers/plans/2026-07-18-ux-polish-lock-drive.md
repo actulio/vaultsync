@@ -18,7 +18,7 @@ These apply to **every** task. Requirements below are implicitly part of each ta
 
 - **Package manager is pnpm.** Never npm. Lockfile is `pnpm-lock.yaml`.
 - **Gates, run after every task:** `pnpm test`, `pnpm run typecheck`, `pnpm run lint`. All three must pass. Lint baseline is **0** errors — do not add any.
-- **Baseline at plan start:** 250 tests / 48 suites, typecheck 0, lint 0, HEAD `c0216fb`.
+- **Baseline at plan start (verified by controller 2026-07-18):** **260 tests / 49 suites**, typecheck 0, lint 0, HEAD `32f662d`.
 - **Styling:** consume `useTheme()` tokens only — `colors`, `spacing`, `radii`, `sizes`, `type`. **No** NativeWind, **no** `className`, **no** inline hex, **no** magic numbers.
 - **i18n:** PT is the default, EN required. Every user-visible string goes through a namespace. Extend namespaces via `src/i18n/registerUiNamespaces.ts` — **never** edit `initI18n`. Test with the longer PT strings.
 - **Commits:** commit directly to `main` (project convention P2-D1). One commit per task minimum.
@@ -264,7 +264,7 @@ and change `ThemedRoot` so the host is the last child inside the themed tree:
 ```bash
 pnpm test && pnpm run typecheck && pnpm run lint
 ```
-Expected: all green; test count 252 (250 + 2).
+Expected: all green; test count 262 (260 + 2).
 
 - [ ] **Step 11: Commit**
 
@@ -620,7 +620,7 @@ and wrap the themed root so every screen can reach it:
 ```bash
 pnpm test && pnpm run typecheck && pnpm run lint
 ```
-Expected: all green; 256 tests.
+Expected: all green; 266 tests.
 
 - [ ] **Step 8: Commit**
 
