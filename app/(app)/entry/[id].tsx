@@ -1,7 +1,9 @@
 import type { JSX } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
 import { copyAndScheduleClear } from '@/native/clipboardWorker';
@@ -19,9 +21,17 @@ type FieldProps = {
   value: string;
   onCopy: () => void;
   copyLabel: string;
+  reveal?:
+    | {
+        revealed: boolean;
+        onToggle: () => void;
+        showLabel: string;
+        hideLabel: string;
+      }
+    | undefined;
 };
 
-function Field({ label, value, onCopy, copyLabel }: FieldProps): JSX.Element {
+function Field({ label, value, onCopy, copyLabel, reveal }: FieldProps): JSX.Element {
   const { colors, spacing, radii, type } = useTheme();
   const fieldStyles = StyleSheet.create({
     card: {
@@ -64,6 +74,20 @@ function Field({ label, value, onCopy, copyLabel }: FieldProps): JSX.Element {
         <Text style={fieldStyles.value} numberOfLines={2}>
           {value}
         </Text>
+        {reveal != null && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={reveal.revealed ? reveal.hideLabel : reveal.showLabel}
+            onPress={reveal.onToggle}
+            style={fieldStyles.copyBtn}
+          >
+            {reveal.revealed ? (
+              <EyeOff size={18} color={colors.textPrimary} />
+            ) : (
+              <Eye size={18} color={colors.textPrimary} />
+            )}
+          </Pressable>
+        )}
         <Pressable accessibilityRole="button" onPress={onCopy} style={fieldStyles.copyBtn}>
           <Text style={fieldStyles.copyBtnText}>{copyLabel}</Text>
         </Pressable>
@@ -81,6 +105,10 @@ export default function EntryDetail(): JSX.Element {
   const { colors, spacing, radii, sizes, type } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const dialog = useDialog();
+
+  // Defaults hidden. Lock resets the nav stack, so this screen remounts on
+  // restore and the password is masked again without an explicit reset.
+  const [revealed, setRevealed] = useState(false);
 
   const vault = useAuthStore((s) => s.vault);
   const masterKey = useAuthStore((s) => s.masterKey);
@@ -185,9 +213,15 @@ export default function EntryDetail(): JSX.Element {
           />
           <Field
             label={t('detail.password')}
-            value="••••••••"
+            value={revealed ? entry.password : '••••••••'}
             onCopy={() => void copy(entry.password)}
             copyLabel={copyLabel}
+            reveal={{
+              revealed,
+              onToggle: () => { setRevealed((v) => !v); },
+              showLabel: t('edit.showPassword'),
+              hideLabel: t('edit.hidePassword'),
+            }}
           />
           {entry.url != null && (
             <Field
