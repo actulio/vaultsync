@@ -96,6 +96,16 @@ describe('EntryDetail password reveal', () => {
 
     // A lock/unlock cycle replaces the route, so the screen remounts and the
     // reveal flag returns to its declared default without any explicit reset.
+    //
+    // NOTE: this test simulates the remount rather than driving a real lock, so
+    // on its own it would still pass if the mechanism were removed. What pins
+    // the mechanism is `__tests__/auth/lockRedirect.test.tsx`, which asserts the
+    // lock handler in app/(app)/_layout.tsx calls router.REPLACE (not push).
+    // `replace` tears this screen out of the stack; `push` would leave it mounted
+    // underneath the unlock screen with `revealed` still true, so the user would
+    // unlock straight back into a visible password.
+    // If you ever change that call, do NOT just update the assertion to match —
+    // you would be silently removing this guarantee.
     await render(wrap(<EntryDetail />));
 
     expect(screen.getByText(MASK)).toBeTruthy();

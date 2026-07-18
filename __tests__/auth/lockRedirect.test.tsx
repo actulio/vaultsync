@@ -65,6 +65,11 @@ describe('lock redirect', () => {
 
   // `render` must be awaited: the tree mounts on a concurrent root, so a
   // synchronous call returns before the layout's effects have ever run.
+  // This assertion is load-bearing beyond the redirect itself: `replace` tears
+  // the locked screens out of the stack, which forces a fresh mount on restore.
+  // That remount is what resets local component state — notably the entry-detail
+  // password reveal (see __tests__/screens/entryReveal.test.tsx). Switching to
+  // `push` would leave those screens mounted with their secrets still revealed.
   it('redirects to /unlock when the vault locks', async () => {
     await render(<AppLayout />);
     await act(async () => {
