@@ -8,5 +8,8 @@
     "back": "Back",
     "next": "Next",
     "copy": "Copy"
-  }
+  },
+  "errorTitle": "Error",
+  "ok": "OK",
+  "cancel": "Cancel"
 }

@@ -10,6 +10,7 @@ import { startAutoLock } from '@/auth/autoLock';
 import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
 import { startVaultReloadOnForeground } from '@/auth/foregroundReload';
+import { VaultToast } from '@/components/toast';
 
 function ThemedRoot(): JSX.Element {
   const { colors } = useTheme();
@@ -24,6 +25,7 @@ function ThemedRoot(): JSX.Element {
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <Stack screenOptions={{ headerShown: false }} />
+      <VaultToast />
     </SafeAreaView>
   );
 }

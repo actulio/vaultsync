@@ -9,7 +9,7 @@ module.exports = {
     '^react-native-libsodium$': '<rootDir>/test/shims/react-native-libsodium.ts',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.pnpm|expo|expo-modules-core|@expo|expo-router|react-native|@react-native|lucide-react-native|libsodium-wrappers-sumo|@noble))',
+    'node_modules/(?!(.pnpm|expo|expo-modules-core|@expo|expo-router|react-native|@react-native|react-native-toast-message|lucide-react-native|libsodium-wrappers-sumo|@noble))',
   ],
   testTimeout: 30_000,
 };
