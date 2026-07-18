@@ -1,20 +1,22 @@
 import type { JSX } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { pickCsv } from '@/import/csvImporter';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function Pick(): JSX.Element {
   const { t } = useTranslation('import');
   const { colors, spacing, radii, sizes, type } = useTheme();
+  const dialog = useDialog();
 
   const onPick = async (): Promise<void> => {
     let r: Awaited<ReturnType<typeof pickCsv>>;
     try {
       r = await pickCsv();
     } catch {
-      Alert.alert(t('importError'));
+      void dialog.alert({ title: t('importError') });
       return;
     }
     if (!r) return;

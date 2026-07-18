@@ -1,6 +1,5 @@
 import { useEffect, useState, type JSX } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,10 +19,13 @@ import {
 import { isBiometricEnabled } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function Unlock(): JSX.Element {
   const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
   const { colors, spacing, radii, type, sizes } = useTheme();
+  const dialog = useDialog();
 
   const [pw, setPw] = useState('');
   const [pwFocused, setPwFocused] = useState(false);
@@ -49,7 +51,7 @@ export default function Unlock(): JSX.Element {
       router.replace('/(app)/(tabs)');
     } catch (e) {
       if ((e as { code?: string }).code === 'E_KEYSTORE_CANCELED') return;
-      Alert.alert('Error', (e as Error).message);
+      void dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
     }
   };
 
@@ -63,7 +65,7 @@ export default function Unlock(): JSX.Element {
       if (e instanceof RecoverableError && e.code === 'wrong_password') {
         setError(t('unlock.wrongPassword'));
       } else {
-        Alert.alert('Error', (e as Error).message);
+        void dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
       }
     }
   };

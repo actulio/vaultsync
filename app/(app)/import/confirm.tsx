@@ -1,11 +1,12 @@
 import { useMemo, type JSX } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { buildPreview, executeImport, deleteTempFile } from '@/import/csvImporter';
 import { rowsToEntries } from '@/import/parsers';
 import type { Mapping } from '@/import/presets';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 /** Parses the `mapping` route param, falling back to an empty mapping on malformed input. */
 function parseMapping(mapping: string | undefined): Mapping {
@@ -19,6 +20,7 @@ function parseMapping(mapping: string | undefined): Mapping {
 export default function Confirm(): JSX.Element {
   const { t } = useTranslation('import');
   const { colors, spacing, radii, sizes, type } = useTheme();
+  const dialog = useDialog();
   const { content, uri, mapping } = useLocalSearchParams<{
     content: string;
     uri: string;
@@ -35,10 +37,13 @@ export default function Confirm(): JSX.Element {
   const go = async (): Promise<void> => {
     try {
       await executeImport(sim.rows, sim.skipped);
-      Alert.alert(t('preview', { logins, notes, skipped: sim.skipped }), t('deleteReminder'));
+      void dialog.alert({
+        title: t('preview', { logins, notes, skipped: sim.skipped }),
+        message: t('deleteReminder'),
+      });
       router.replace('/(app)/(tabs)');
     } catch {
-      Alert.alert(t('importError'));
+      void dialog.alert({ title: t('importError') });
     } finally {
       if (uri) await deleteTempFile(uri);
     }

@@ -1,6 +1,5 @@
 import { useState, type JSX } from 'react';
 import {
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,10 +11,13 @@ import { useTranslation } from 'react-i18next';
 import { recoverAndReset } from '@/auth/recovery';
 import { RecoverableError } from '@/auth/unlock';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function RecoveryUnlock(): JSX.Element {
   const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
   const { colors, spacing, radii, type } = useTheme();
+  const dialog = useDialog();
 
   const [code, setCode] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -37,7 +39,7 @@ export default function RecoveryUnlock(): JSX.Element {
       if (e instanceof RecoverableError && e.code === 'wrong_recovery_code') {
         setError(t('recoveryUnlock.invalid'));
       } else {
-        Alert.alert('Error', (e as Error).message);
+        void dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
       }
     } finally {
       setSubmitting(false);

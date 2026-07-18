@@ -1,13 +1,15 @@
 import { useEffect, useState, type JSX } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { enableBiometric, disableBiometric, isBiometricEnabled } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function BiometricSettings(): JSX.Element {
   const { t } = useTranslation('settings');
   const { colors, spacing, radii, type } = useTheme();
+  const dialog = useDialog();
   // null = still loading the current state; avoids a flash of the wrong label.
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -27,7 +29,7 @@ export default function BiometricSettings(): JSX.Element {
       } else {
         const key = useAuthStore.getState().masterKey;
         if (!key) {
-          Alert.alert(t('biometric.title'), t('biometric.locked'));
+          void dialog.alert({ title: t('biometric.title'), message: t('biometric.locked') });
           return;
         }
         // Wrapping shows the system biometric prompt; rejects on cancel/unavailable.
@@ -36,7 +38,7 @@ export default function BiometricSettings(): JSX.Element {
       }
     } catch (e) {
       if ((e as { code?: string }).code !== 'E_KEYSTORE_CANCELED') {
-        Alert.alert(t('biometric.title'), t('biometric.unavailable'));
+        void dialog.alert({ title: t('biometric.title'), message: t('biometric.unavailable') });
       }
     } finally {
       setBusy(false);

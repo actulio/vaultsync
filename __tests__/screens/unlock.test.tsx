@@ -1,6 +1,7 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { ThemeProvider } from '@/theme';
+import { DialogProvider } from '@/components/DialogProvider';
 
 // -----------------------------------------------------------------------
 // Mocks — factories must be self-contained (no out-of-scope references)
@@ -57,6 +58,14 @@ import { unlockWithPassword, unlockWithBiometric, RecoverableError } from '@/aut
 import { Biometric } from '@/native/biometric';
 import Unlock from '../../app/unlock';
 
+function wrap(ui: React.ReactElement): React.ReactElement {
+  return (
+    <ThemeProvider>
+      <DialogProvider>{ui}</DialogProvider>
+    </ThemeProvider>
+  );
+}
+
 // -----------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------
@@ -75,7 +84,7 @@ describe('Unlock screen', () => {
   });
 
   it('renders Portuguese title by default', async () => {
-    const { findByText } = await render(<Unlock />);
+    const { findByText } = await render(wrap(<Unlock />));
     expect(await findByText('Desbloquear vaultsync')).toBeTruthy();
   });
 
@@ -84,7 +93,7 @@ describe('Unlock screen', () => {
       new RecoverableError('wrong_password'),
     );
 
-    const { findByLabelText, findByText } = await render(<Unlock />);
+    const { findByLabelText, findByText } = await render(wrap(<Unlock />));
 
     const input = await findByLabelText('Senha mestre', { exact: false });
     void fireEvent.changeText(input, 'badpassword');
@@ -96,7 +105,7 @@ describe('Unlock screen', () => {
   });
 
   it('renders the biometric icon button (by accessibilityLabel) when biometric unlock is enabled', async () => {
-    const { findByLabelText, queryByText } = await render(<Unlock />);
+    const { findByLabelText, queryByText } = await render(wrap(<Unlock />));
     expect(await findByLabelText('Usar biometria')).toBeTruthy();
     // Icon-only: the biometric control must not render its label as visible text
     // (that would be the old full-width button, not the compact icon button).
@@ -107,29 +116,29 @@ describe('Unlock screen', () => {
     const bio = jest.requireMock<{ isBiometricEnabled: jest.Mock }>('@/auth/biometric');
     bio.isBiometricEnabled.mockResolvedValueOnce(false);
 
-    const { queryByLabelText, findByText } = await render(<Unlock />);
+    const { queryByLabelText, findByText } = await render(wrap(<Unlock />));
     // Wait for the screen to settle (the password CTA is always present).
     await findByText('Desbloquear');
     expect(queryByLabelText('Usar biometria')).toBeNull();
   });
 
   it('renders forgot password link', async () => {
-    const { findByText } = await render(<Unlock />);
+    const { findByText } = await render(wrap(<Unlock />));
     expect(await findByText('Esqueci minha senha mestre')).toBeTruthy();
   });
 
-  it('shows Alert when unlockWithBiometric throws after a successful prompt', async () => {
+  it('shows the dialog when unlockWithBiometric throws after a successful prompt', async () => {
     (Biometric.prompt as jest.Mock).mockResolvedValueOnce('success');
     (unlockWithBiometric as jest.Mock).mockRejectedValueOnce(
       new RecoverableError('vault_corrupt'),
     );
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 
-    const { findByLabelText } = await render(<Unlock />);
+    const { findByLabelText, findByText } = await render(wrap(<Unlock />));
     const biometricBtn = await findByLabelText('Usar biometria');
     void fireEvent.press(biometricBtn);
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+    expect(await findByText('Erro')).toBeTruthy();
+    expect(await findByText('vault_corrupt')).toBeTruthy();
   });
 
   it('unlocks and navigates to the app when biometric prompt succeeds', async () => {
@@ -140,7 +149,7 @@ describe('Unlock screen', () => {
     });
     const { router } = jest.requireMock<{ router: { replace: jest.Mock } }>('expo-router');
 
-    const { findByLabelText } = await render(<Unlock />);
+    const { findByLabelText } = await render(wrap(<Unlock />));
     const biometricBtn = await findByLabelText('Usar biometria');
     void fireEvent.press(biometricBtn);
 

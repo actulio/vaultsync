@@ -1,7 +1,6 @@
 import { useState, type JSX } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,10 +12,13 @@ import { useTranslation } from 'react-i18next';
 import { createVault } from '@/auth/onboarding';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function SetPassword(): JSX.Element {
   const { t } = useTranslation('onboarding');
+  const { t: tCommon } = useTranslation('common');
   const { colors, spacing, radii, type } = useTheme();
+  const dialog = useDialog();
 
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -46,7 +48,7 @@ export default function SetPassword(): JSX.Element {
         params: { code: result.recoveryCode },
       });
     } catch (e) {
-      Alert.alert('Error', (e as Error).message);
+      void dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
     } finally {
       setSubmitting(false);
     }

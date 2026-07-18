@@ -1,14 +1,16 @@
-import { Alert, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
 import { enableBiometric } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
 import { useTheme } from '@/theme';
+import { useDialog } from '@/components/DialogProvider';
 
 export default function BiometricEnroll(): JSX.Element {
   const { t } = useTranslation('onboarding');
   const { colors, spacing, radii, type } = useTheme();
+  const dialog = useDialog();
 
   const enable = async (): Promise<void> => {
     const key = useAuthStore.getState().masterKey;
@@ -25,7 +27,7 @@ export default function BiometricEnroll(): JSX.Element {
       } catch (e) {
         // Cancel is a deliberate choice to skip; only surface real failures.
         if ((e as { code?: string }).code !== 'E_KEYSTORE_CANCELED') {
-          Alert.alert(t('biometric.title'), t('biometric.unavailable'));
+          void dialog.alert({ title: t('biometric.title'), message: t('biometric.unavailable') });
         }
       }
     }

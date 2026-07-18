@@ -1,9 +1,18 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { useAuthStore } from '@/auth/store';
 import type { VaultV1 } from '@/vault/types';
+import { ThemeProvider } from '@/theme';
+import { DialogProvider } from '@/components/DialogProvider';
 import EntryDetail from '../../app/(app)/entry/[id]';
+
+function wrap(ui: React.ReactElement): React.ReactElement {
+  return (
+    <ThemeProvider>
+      <DialogProvider>{ui}</DialogProvider>
+    </ThemeProvider>
+  );
+}
 
 // -----------------------------------------------------------------------
 // Mocks — factories must be self-contained (no out-of-scope references)
@@ -59,7 +68,7 @@ afterEach(() => {
 
 describe('EntryDetail', () => {
   it('renders title and login fields', async () => {
-    await render(<EntryDetail />);
+    await render(wrap(<EntryDetail />));
     expect(screen.getByText('GitHub')).toBeTruthy();
     expect(screen.getByText('Usuário')).toBeTruthy();
     expect(screen.getByText('Senha')).toBeTruthy();
@@ -68,7 +77,7 @@ describe('EntryDetail', () => {
   });
 
   it('copies username via copyAndScheduleClear', async () => {
-    await render(<EntryDetail />);
+    await render(wrap(<EntryDetail />));
 
     // First "Copiar" button belongs to the username field
     const copyButtons = screen.getAllByText('Copiar');
@@ -91,15 +100,15 @@ describe('EntryDetail', () => {
     }>('@/vault/persist');
     const { router } = jest.requireMock<{ router: { back: jest.Mock } }>('expo-router');
 
-    // Immediately invoke the destructive button's onPress when Alert fires
-    jest.spyOn(Alert, 'alert').mockImplementation((_title, _msg, buttons) => {
-      const destructive = buttons?.find((b) => b.style === 'destructive');
-      void destructive?.onPress?.();
-    });
-
-    await render(<EntryDetail />);
+    await render(wrap(<EntryDetail />));
     const deleteBtn = screen.getByText('Excluir');
     await fireEvent.press(deleteBtn);
+
+    // Confirm via the dialog's destructive button (also labeled "Excluir").
+    const confirmBtns = await screen.findAllByText('Excluir');
+    const confirmBtn = confirmBtns[confirmBtns.length - 1];
+    if (!confirmBtn) throw new Error('No confirm button found');
+    await fireEvent.press(confirmBtn);
 
     await waitFor(() => {
       expect(persistVault).toHaveBeenCalledTimes(1);

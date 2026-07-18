@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/auth/store';
@@ -8,6 +8,7 @@ import { copyAndScheduleClear } from '@/native/clipboardWorker';
 import { showToast } from '@/components/toast';
 import { persistVault } from '@/vault/persist';
 import { deleteEntry } from '@/vault/mutations';
+import { useDialog } from '@/components/DialogProvider';
 
 // ---------------------------------------------------------------------------
 // Field row — label + value + Copy button
@@ -79,6 +80,7 @@ export default function EntryDetail(): JSX.Element {
   const { t } = useTranslation('vault');
   const { colors, spacing, radii, sizes, type } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const dialog = useDialog();
 
   const vault = useAuthStore((s) => s.vault);
   const masterKey = useAuthStore((s) => s.masterKey);
@@ -157,14 +159,16 @@ export default function EntryDetail(): JSX.Element {
   };
 
   const remove = (): void => {
-    Alert.alert(t('detail.confirmDelete'), '', [
-      { text: t('detail.cancel'), style: 'cancel' },
-      {
-        text: t('detail.delete'),
-        style: 'destructive',
-        onPress: () => { void doDelete(); },
-      },
-    ]);
+    void dialog
+      .confirm({
+        title: t('detail.confirmDelete'),
+        confirmLabel: t('detail.delete'),
+        cancelLabel: t('detail.cancel'),
+        destructive: true,
+      })
+      .then((ok) => {
+        if (ok) void doDelete();
+      });
   };
 
   return (

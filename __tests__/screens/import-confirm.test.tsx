@@ -1,9 +1,18 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import type * as CsvImporterModule from '@/import/csvImporter';
+import { ThemeProvider } from '@/theme';
+import { DialogProvider } from '@/components/DialogProvider';
 import ConfirmScreen from '../../app/(app)/import/confirm';
+
+function wrap(ui: React.ReactElement): React.ReactElement {
+  return (
+    <ThemeProvider>
+      <DialogProvider>{ui}</DialogProvider>
+    </ThemeProvider>
+  );
+}
 
 // -----------------------------------------------------------------------
 // Mocks — factories must be self-contained (no out-of-scope references).
@@ -72,7 +81,6 @@ beforeEach(() => {
   getCsvImporter().executeImport.mockResolvedValue({ added: 1, skipped: 1 });
   getCsvImporter().deleteTempFile.mockResolvedValue(undefined);
   setParams({ content: CSV_CONTENT, uri: 'file:///tmp/import.csv', mapping: MAPPING_PARAM });
-  jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
 });
 
 afterEach(() => {
@@ -85,14 +93,14 @@ afterEach(() => {
 
 describe('Import Confirm screen', () => {
   it('parses the mapping param and renders the split logins/notes/skipped preview text', async () => {
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     // Fixture: 1 valid login row (GitHub), 1 skipped row (no title), 0 notes.
     expect(screen.getByText('Importar 1 logins, 0 notas seguras, ignorar 1 linhas')).toBeTruthy();
   });
 
   it('pressing Import deletes the temp file when uri is defined', async () => {
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     await fireEvent.press(screen.getByText('Importar'));
 
@@ -104,7 +112,7 @@ describe('Import Confirm screen', () => {
   it('pressing Import does NOT call deleteTempFile when uri is undefined', async () => {
     setParams({ content: CSV_CONTENT, mapping: MAPPING_PARAM });
 
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     await fireEvent.press(screen.getByText('Importar'));
 
@@ -114,31 +122,33 @@ describe('Import Confirm screen', () => {
     expect(getCsvImporter().deleteTempFile).not.toHaveBeenCalled();
   });
 
-  it('shows an error alert and still deletes the temp file when executeImport rejects', async () => {
+  it('shows an error dialog and still deletes the temp file when executeImport rejects', async () => {
     getCsvImporter().executeImport.mockRejectedValue(new Error('cannot import: vault is locked'));
 
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     await fireEvent.press(screen.getByText('Importar'));
 
     await waitFor(() => {
       expect(getCsvImporter().deleteTempFile).toHaveBeenCalledWith('file:///tmp/import.csv');
     });
-    expect(Alert.alert).toHaveBeenCalledWith('Falha na importação. Seu cofre não foi alterado — tente novamente.');
+    expect(
+      await screen.findByText('Falha na importação. Seu cofre não foi alterado — tente novamente.'),
+    ).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('falls back to an empty mapping and does not throw when the mapping param is malformed', async () => {
     setParams({ content: CSV_CONTENT, uri: 'file:///tmp/import.csv', mapping: '{not json' });
 
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     // With an empty mapping every row is unmapped, so all rows are skipped.
     expect(screen.getByText('Importar 0 logins, 0 notas seguras, ignorar 2 linhas')).toBeTruthy();
   });
 
   it('does not show a parse-errors line for a well-formed CSV', async () => {
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     expect(screen.queryByText(/não puderam ser processadas/)).toBeNull();
   });
@@ -149,7 +159,7 @@ describe('Import Confirm screen', () => {
     const malformed = `${CSV_CONTENT}\nBroken,https://x.com,carol,secret,notes,extra,field`;
     setParams({ content: malformed, uri: 'file:///tmp/import.csv', mapping: MAPPING_PARAM });
 
-    await render(<ConfirmScreen />);
+    await render(wrap(<ConfirmScreen />));
 
     expect(screen.getByText('1 linha(s) não puderam ser processadas e foram ignoradas')).toBeTruthy();
   });
