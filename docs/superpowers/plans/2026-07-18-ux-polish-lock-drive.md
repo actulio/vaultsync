@@ -202,43 +202,17 @@ export function showToast(message: string): void {
 Run: `pnpm test __tests__/components/toast.test.tsx`
 Expected: PASS, 2 tests.
 
-- [ ] **Step 7: Create the shared `common` i18n namespace**
+- [ ] **Step 7: Add the shared error/action keys to the existing `common` namespace**
 
-Create `src/i18n/locales/pt/common.json`:
+> **CORRECTED 2026-07-18 (controller).** An earlier draft of this step said to *create* these files and register them via `registerUiNamespaces`. Both are wrong: `src/i18n/locales/{pt,en}/common.json` **already exist**, and `common` is a **core** namespace loaded directly by `initI18n` (`src/i18n/index.ts:27` — `ns: ['common','errors'], defaultNS: 'common'`). Registering it again through `registerUiNamespaces` would be a duplicate registration.
 
-```json
-{
-  "errorTitle": "Erro",
-  "ok": "OK",
-  "cancel": "Cancelar"
-}
-```
+**Merge** the needed keys into the existing `src/i18n/locales/pt/common.json` and `.../en/common.json`, preserving everything already there. Before adding a key, check whether an equivalent already exists — the file already carries an `actions` block containing `cancel`, `confirm`, `save`, `delete`, `back`, `next`, and `copy`. **Reuse `actions.cancel` rather than adding a second top-level `cancel`.**
 
-Create `src/i18n/locales/en/common.json`:
+Required after this step: an error-dialog title key (PT `"Erro"` / EN `"Error"`) and an OK-button key, plus a cancel label sourced from the existing `actions.cancel`.
 
-```json
-{
-  "errorTitle": "Error",
-  "ok": "OK",
-  "cancel": "Cancel"
-}
-```
+- [ ] **Step 8: Leave `registerUiNamespaces.ts` unchanged**
 
-- [ ] **Step 8: Register the namespace**
-
-In `src/i18n/registerUiNamespaces.ts`, add the imports alongside the existing ones:
-
-```ts
-import ptCommon from './locales/pt/common.json';
-import enCommon from './locales/en/common.json';
-```
-
-and inside `registerUiNamespaces()`, add:
-
-```ts
-  addNamespace('pt', 'common', ptCommon);
-  addNamespace('en', 'common', enCommon);
-```
+`common` is a core namespace — no registration needed. Do not edit `initI18n` either (global constraint).
 
 - [ ] **Step 9: Mount the host in the root layout**
 
@@ -285,7 +259,7 @@ git commit -m "feat(ui): branded toast host and showToast wrapper"
 - Test: `__tests__/components/dialog.test.tsx`
 
 **Interfaces:**
-- Consumes: `useTheme()`; i18n `common` namespace from Task 1
+- Consumes: `useTheme()`; the **core** i18n `common` namespace (loaded by `initI18n`, no registration needed). Available keys: `errorTitle`, `ok`, and `actions.cancel`. **Use `t('actions.cancel')`** — a top-level `cancel` was added in Task 1 and removed as a duplicate during its review.
 - Produces:
   - `type DialogButtonVariant = 'default' | 'destructive' | 'cancel'`
   - `<DialogProvider>{children}</DialogProvider>`
@@ -471,6 +445,15 @@ export function Dialog({
 
 - [ ] **Step 4: Implement the provider**
 
+> ⚠️ **The reference code below has TWO KNOWN PROMISE LEAKS.** They were found in review during execution and fixed in commit `5b7e7e4` — **use the committed implementation in `src/components/DialogProvider.tsx`, not this snippet**, if you are re-running this task.
+>
+> 1. **Concurrent-call leak.** `pending` is a single slot. Calling `confirm()`/`alert()` again before the first settles overwrites `pending.current`, orphaning the first resolver — that promise hangs forever, never resolved and never rejected. Fix: settle any pending resolver as `false` **before** storing the new one (order matters — reversing it orphans the *new* resolver instead).
+> 2. **Unmount leak.** Unmounting with a dialog open discards the pending resolver. Fix: a `useEffect(() => () => { ... }, [])` cleanup that resolves the pending promise via the ref directly — it must **not** call `settle()`, which would trigger `setState` on an unmounted component.
+>
+> Also: the `Dialog` scrim below is a plain `View`, so its documented "scrim tap" dismissal does not work. The fix makes the scrim a `Pressable` with the card as a nested `Pressable` carrying a no-op `onPress`.
+>
+> With 11 call sites wired onto this API, a hung promise means a handler that silently never continues — no crash, no error, effectively undebuggable. Do not reintroduce these.
+
 Create `src/components/DialogProvider.tsx`:
 
 ```tsx
@@ -555,7 +538,7 @@ export function DialogProvider({ children }: { children: ReactNode }): JSX.Eleme
               onPress: () => settle(true),
             },
             {
-              label: o.cancelLabel ?? t('cancel'),
+              label: o.cancelLabel ?? t('actions.cancel'),
               variant: 'cancel',
               onPress: () => settle(false),
             },
