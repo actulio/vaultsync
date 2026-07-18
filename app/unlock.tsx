@@ -7,7 +7,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint } from 'lucide-react-native';
 import {
@@ -18,6 +18,7 @@ import {
 } from '@/auth/unlock';
 import { isBiometricEnabled } from '@/auth/biometric';
 import { useAuthStore } from '@/auth/store';
+import { takePendingRoute } from '@/auth/lockRoute';
 import { useTheme } from '@/theme';
 import { useDialog } from '@/components/DialogProvider';
 
@@ -48,7 +49,11 @@ export default function Unlock(): JSX.Element {
     try {
       const { masterKey, vault } = await unlockWithBiometric();
       useAuthStore.getState().unlock(masterKey, vault);
-      router.replace('/(app)/(tabs)');
+      // Return the user to whatever screen the lock interrupted; the tab root is
+      // the fallback for a cold start, where nothing was remembered. The cast is
+      // needed because typed routes cannot express a route captured at runtime;
+      // setPendingRoute only ever stores a real in-app pathname.
+      router.replace((takePendingRoute() ?? '/(app)/(tabs)') as Href);
     } catch (e) {
       if ((e as { code?: string }).code === 'E_KEYSTORE_CANCELED') return;
       void dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
@@ -60,7 +65,7 @@ export default function Unlock(): JSX.Element {
     try {
       const { masterKey, vault } = await unlockWithPassword(pw);
       useAuthStore.getState().unlock(masterKey, vault);
-      router.replace('/(app)/(tabs)');
+      router.replace((takePendingRoute() ?? '/(app)/(tabs)') as Href);
     } catch (e) {
       if (e instanceof RecoverableError && e.code === 'wrong_password') {
         setError(t('unlock.wrongPassword'));
