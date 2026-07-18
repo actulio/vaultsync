@@ -1151,6 +1151,10 @@ class ClipboardSensitiveTest {
 }
 ```
 
+> ⚠️ **Step 1 of this task replaces `__tests__/native/clipboardWorker.test.ts` wholesale. The replacement shown ABOVE DROPS TWO EXISTING TESTS** — `cancelPendingClear` and the copy-before-schedule ordering check. **Keep them.** Merge the new cases into the existing file rather than overwriting it; the file should end with 6 tests, not 4. (Caught in execution 2026-07-18.)
+>
+> ⚠️ **Step 7 removes the `30` literal from `entry/[id].tsx`, which `__tests__/screens/entry-detail.test.tsx` asserts on.** That file is not in this task's file list and Step 9's targeted test run will not catch it. Update it in the same commit.
+
 - [ ] **Step 11: Build the native module**
 
 Via context-mode `ctx_execute` (Bash blocks `gradlew`):
@@ -1160,6 +1164,15 @@ cd /Users/work/personal/random/vaultsync/android && \
 JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew :vaultsync-native:assembleDebug
 ```
 Expected: `BUILD SUCCESSFUL`. On a foojay / `JvmVendorSpec.IBM_SEMERU` error, run `./gradlew --stop` and retry.
+
+**Then also build the androidTest source set:**
+
+```bash
+cd /Users/work/personal/random/vaultsync/android && \
+JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew :vaultsync-native:assembleDebugAndroidTest
+```
+
+`assembleDebug` does **not** compile `src/androidTest`, so without this the instrumented Kotlin test written in Step 10 ships entirely unchecked — including whether `ApplicationProvider` even resolves (`androidx.test:core` is only a transitive dependency here). This proves it compiles and packages. It is **not** evidence that it passes.
 
 - [ ] **Step 12: Run the instrumented test (requires emulator or device)**
 
