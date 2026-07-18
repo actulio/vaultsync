@@ -15,7 +15,7 @@ export type DialogProps = {
   title: string;
   message?: string | undefined;
   buttons: DialogButton[];
-  /** Android hardware back / scrim tap. */
+  /** Android hardware back / tapping the scrim outside the card. */
   onDismiss: () => void;
 };
 
@@ -70,8 +70,19 @@ export function Dialog({
       onRequestClose={onDismiss}
       statusBarTranslucent
     >
-      <View style={styles.scrim}>
-        <View style={styles.card} accessibilityViewIsModal accessibilityRole="alert">
+      <Pressable
+        testID="dialog-scrim"
+        style={styles.scrim}
+        onPress={onDismiss}
+        accessibilityRole="button"
+      >
+        <Pressable
+          testID="dialog-card"
+          style={styles.card}
+          onPress={() => {}}
+          accessibilityViewIsModal
+          accessibilityRole="alert"
+        >
           <Text style={styles.title}>{title}</Text>
           {message != null && message !== '' && <Text style={styles.message}>{message}</Text>}
           <View style={styles.buttonRow}>
@@ -92,8 +103,8 @@ export function Dialog({
               </Pressable>
             ))}
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }

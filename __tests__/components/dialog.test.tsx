@@ -57,4 +57,69 @@ describe('DialogProvider', () => {
     void fireEvent.press(await findByText('Cancelar'));
     await waitFor(() => expect(queryByText('Excluir esta entrada?')).toBeNull());
   });
+
+  it('settles the first promise as false when a second confirm supersedes it before it settles', async () => {
+    function TwoConfirms(): React.JSX.Element {
+      const dialog = useDialog();
+      return (
+        <Button
+          title="ask-twice"
+          onPress={() => {
+            const first = dialog.confirm({ title: 'First?' });
+            const second = dialog.confirm({ title: 'Second?' });
+            void first.then((v) => firstResult(v));
+            void second.then((v) => secondResult(v));
+          }}
+        />
+      );
+    }
+    const firstResult = jest.fn();
+    const secondResult = jest.fn();
+    const { getByText, findByText } = await render(wrap(<TwoConfirms />));
+    void fireEvent.press(getByText('ask-twice'));
+
+    // The second dialog is the one left on screen.
+    expect(await findByText('Second?')).toBeTruthy();
+    // The first call's promise must not hang — it settles as cancelled.
+    await waitFor(() => expect(firstResult).toHaveBeenCalledWith(false));
+    expect(secondResult).not.toHaveBeenCalled();
+  });
+
+  it('settles the pending promise as false when the provider unmounts with a dialog open', async () => {
+    const onResult = jest.fn();
+    const { getByText, findByText, unmount } = await render(wrap(<Harness onResult={onResult} />));
+    void fireEvent.press(getByText('ask'));
+    await findByText('Excluir esta entrada?');
+
+    await unmount();
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(false));
+  });
+
+  it('dismisses and resolves false when the scrim is pressed', async () => {
+    const onResult = jest.fn();
+    const { getByText, findByText, getByTestId } = await render(
+      wrap(<Harness onResult={onResult} />),
+    );
+    void fireEvent.press(getByText('ask'));
+    await findByText('Excluir esta entrada?');
+
+    void fireEvent.press(getByTestId('dialog-scrim'));
+
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(false));
+  });
+
+  it('does not dismiss when the card itself is pressed', async () => {
+    const onResult = jest.fn();
+    const { getByText, findByText, getByTestId } = await render(
+      wrap(<Harness onResult={onResult} />),
+    );
+    void fireEvent.press(getByText('ask'));
+    await findByText('Excluir esta entrada?');
+
+    void fireEvent.press(getByTestId('dialog-card'));
+
+    await waitFor(() => expect(getByText('Excluir esta entrada?')).toBeTruthy());
+    expect(onResult).not.toHaveBeenCalled();
+  });
 });

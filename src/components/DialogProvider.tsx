@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, type DialogButton } from './Dialog';
@@ -48,9 +48,28 @@ export function DialogProvider({ children }: { children: ReactNode }): JSX.Eleme
     resolve?.(value);
   }, []);
 
+  // Settle any resolver left over from a still-open dialog before opening a
+  // new one — otherwise the earlier caller's promise would never resolve.
+  const settlePendingAsCancelled = useCallback(() => {
+    const resolve = pending.current;
+    pending.current = null;
+    resolve?.(false);
+  }, []);
+
+  // If the provider unmounts while a dialog is open, resolve its promise
+  // instead of leaking it — without touching state on an unmounted component.
+  useEffect(() => {
+    return () => {
+      const resolve = pending.current;
+      pending.current = null;
+      resolve?.(false);
+    };
+  }, []);
+
   const alert = useCallback(
     (o: AlertOptions): Promise<void> =>
       new Promise<void>((resolve) => {
+        settlePendingAsCancelled();
         pending.current = () => resolve();
         setState({
           visible: true,
@@ -61,12 +80,13 @@ export function DialogProvider({ children }: { children: ReactNode }): JSX.Eleme
           ],
         });
       }),
-    [settle, t],
+    [settle, settlePendingAsCancelled, t],
   );
 
   const confirm = useCallback(
     (o: ConfirmOptions): Promise<boolean> =>
       new Promise<boolean>((resolve) => {
+        settlePendingAsCancelled();
         pending.current = resolve;
         setState({
           visible: true,
@@ -86,7 +106,7 @@ export function DialogProvider({ children }: { children: ReactNode }): JSX.Eleme
           ],
         });
       }),
-    [settle, t],
+    [settle, settlePendingAsCancelled, t],
   );
 
   const api = useMemo<DialogApi>(() => ({ alert, confirm }), [alert, confirm]);
