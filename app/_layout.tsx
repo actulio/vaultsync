@@ -11,6 +11,7 @@ import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
 import { startVaultReloadOnForeground } from '@/auth/foregroundReload';
 import { VaultToast } from '@/components/toast';
+import { DialogProvider } from '@/components/DialogProvider';
 
 function ThemedRoot(): JSX.Element {
   const { colors } = useTheme();
@@ -55,7 +56,9 @@ export default function RootLayout(): JSX.Element {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ThemedRoot />
+        <DialogProvider>
+          <ThemedRoot />
+        </DialogProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
