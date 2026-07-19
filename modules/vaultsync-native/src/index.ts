@@ -18,6 +18,8 @@ type VaultsyncNativeModule = {
   isAutofillSupported(): Promise<boolean>;
   isAutofillServiceEnabled(): Promise<boolean>;
   requestSetAutofillService(): Promise<void>;
+  /** Set FLAG_SECURE on the Activity window. Resolves false if no Activity yet. */
+  enableScreenCaptureProtection(): Promise<boolean>;
 };
 
 const VaultsyncNative = requireNativeModule<VaultsyncNativeModule>('VaultsyncNative');

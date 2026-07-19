@@ -1,6 +1,7 @@
 package expo.modules.vaultsyncnative
 
 import android.content.Intent
+import android.view.WindowManager
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -243,6 +244,36 @@ class VaultsyncNativeModule : Module() {
     AsyncFunction("requestSetAutofillService") { promise: Promise ->
       autofill.requestEnable(appContext.currentActivity)
       promise.resolve(null)
+    }
+
+    /**
+     * Set FLAG_SECURE on the Activity window, app-wide and permanently for the
+     * process lifetime.
+     *
+     * This keeps the window out of screenshots, screen recordings and — the case
+     * that motivated it — the Android recents/app-switcher thumbnail, which would
+     * otherwise capture a revealed password left on the entry detail screen.
+     * Deliberately unconditional: the vault list, entry fields and the generator
+     * all render secrets too, so gating this on the reveal toggle would leave
+     * most of the exposure open.
+     *
+     * Window flags may only be touched from the UI thread, hence runOnUiThread.
+     * A null activity (called before the Activity exists) is a no-op rather than
+     * a crash; startup calls this again on the next mount.
+     */
+    AsyncFunction("enableScreenCaptureProtection") { promise: Promise ->
+      val activity = appContext.currentActivity
+      if (activity == null) {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      activity.runOnUiThread {
+        activity.window?.setFlags(
+          WindowManager.LayoutParams.FLAG_SECURE,
+          WindowManager.LayoutParams.FLAG_SECURE,
+        )
+      }
+      promise.resolve(true)
     }
 
     OnActivityResult { _, payload ->

@@ -11,6 +11,7 @@ import { loadPrefs } from '@/settings/prefs';
 import { startSyncOnForeground } from '@/sync/hooks';
 import { startVaultReloadOnForeground } from '@/auth/foregroundReload';
 import { startClipboardClearOnForeground } from '@/native/clipboardWorker';
+import { enableScreenCaptureProtection } from '@/native/screenProtection';
 import { VaultToast } from '@/components/toast';
 import { DialogProvider } from '@/components/DialogProvider';
 
@@ -57,6 +58,12 @@ export default function RootLayout(): JSX.Element {
   // Android only lets the focused app touch the clipboard, so a copied secret can
   // only actually be wiped while we are in the foreground.
   useEffect(() => startClipboardClearOnForeground(), []);
+
+  // Keep the window out of screenshots, screen recordings and the recents
+  // thumbnail. Set once for the process; never conditional on the reveal toggle.
+  useEffect(() => {
+    void enableScreenCaptureProtection();
+  }, []);
 
   return (
     <SafeAreaProvider>

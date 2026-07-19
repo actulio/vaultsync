@@ -34,8 +34,18 @@ jest.mock('@/native/clipboardWorker', () => ({
   startClipboardClearOnForeground: jest.fn(() => () => {}),
 }));
 
+jest.mock('@/native/screenProtection', () => ({
+  enableScreenCaptureProtection: jest.fn(async () => {}),
+}));
+
 function getStartAutoLock() {
   return jest.requireMock<{ startAutoLock: jest.Mock }>('@/auth/autoLock').startAutoLock;
+}
+
+function getEnableScreenCaptureProtection() {
+  return jest.requireMock<{ enableScreenCaptureProtection: jest.Mock }>(
+    '@/native/screenProtection',
+  ).enableScreenCaptureProtection;
 }
 
 function getLoadPrefs() {
@@ -67,5 +77,13 @@ describe('RootLayout', () => {
     await waitFor(() => expect(getStartAutoLock()).toHaveBeenCalled());
     expect(getStartAutoLock()).not.toHaveBeenCalledWith(5 * 60 * 1000);
     expect(getStartAutoLock()).toHaveBeenCalledWith(1 * 60 * 1000);
+  });
+
+  it('enables screen-capture protection on mount', async () => {
+    await render(<RootLayout />);
+
+    await waitFor(() => {
+      expect(getEnableScreenCaptureProtection()).toHaveBeenCalledTimes(1);
+    });
   });
 });
