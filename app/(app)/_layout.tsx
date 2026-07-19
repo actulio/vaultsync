@@ -1,4 +1,4 @@
-import { Stack, router, usePathname } from 'expo-router';
+import { Stack, router, usePathname, useSegments } from 'expo-router';
 import { useEffect, useRef, type JSX } from 'react';
 import { useAuthStore } from '@/auth/store';
 import { runStaleCleanup } from '@/auth/staleCleanup';
@@ -10,12 +10,20 @@ export default function AppLayout(): JSX.Element {
   // miss re-unlocks. Re-running on every transition into 'unlocked' covers
   // both a fresh mount and a layout that stayed alive across a re-lock.
   const status = useAuthStore((s) => s.status);
+  // Two hooks, two jobs. `usePathname()` gives the navigable URL (`/entry/abc`)
+  // — that is what gets stored and later handed to `router.replace`. It cannot
+  // answer "is this inside the (app) group?", because expo-router strips group
+  // segments from the URL. `useSegments()` returns unnormalized file segments
+  // (`['(app)', 'entry', '[id]']`), so it is the only one that can.
   const pathname = usePathname();
+  const segments = useSegments();
 
-  // Track the live pathname without making the lock effect depend on it —
+  // Track the live route without making the lock effect depend on it —
   // re-running that effect on every navigation would be wrong.
   const pathRef = useRef(pathname);
   pathRef.current = pathname;
+  const segmentsRef = useRef<readonly string[]>(segments);
+  segmentsRef.current = segments;
 
   useEffect(() => {
     if (status === 'unlocked') void runStaleCleanup();
@@ -27,7 +35,7 @@ export default function AppLayout(): JSX.Element {
   // which also guarantees a fresh mount (and hidden secrets) on restore.
   useEffect(() => {
     if (status === 'locked') {
-      setPendingRoute(pathRef.current);
+      setPendingRoute(pathRef.current, segmentsRef.current);
       router.replace('/unlock');
     }
   }, [status]);

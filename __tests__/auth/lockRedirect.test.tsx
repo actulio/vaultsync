@@ -11,7 +11,15 @@ jest.mock('expo-router', () => ({
     Screen: () => null,
   }),
   router: { replace: (...a: unknown[]) => mockReplace(...a), push: jest.fn() },
-  usePathname: () => '/(app)/entry/abc',
+  // These two must stay in the shapes expo-router really returns for
+  // `app/(app)/entry/[id].tsx`. `usePathname()` is the normalized URL and group
+  // folders are stripped from it by design, so it is `/entry/abc` — it can
+  // never contain `(app)`. `useSegments()` is the unnormalized file path and
+  // does keep the group. An earlier version of this mock returned
+  // '/(app)/entry/abc' from usePathname, which is unreachable on device; it
+  // made these tests pass against a restore path that never once fired.
+  usePathname: () => '/entry/abc',
+  useSegments: () => ['(app)', 'entry', '[id]'],
 }));
 
 jest.mock('@/auth/staleCleanup', () => ({ runStaleCleanup: jest.fn().mockResolvedValue(undefined) }));
@@ -83,7 +91,7 @@ describe('lock redirect', () => {
     await act(async () => {
       useAuthStore.getState().lock();
     });
-    expect(takePendingRoute()).toBe('/(app)/entry/abc');
+    expect(takePendingRoute()).toBe('/entry/abc');
   });
 
   it('does not redirect while unlocked', async () => {
@@ -107,23 +115,23 @@ describe('route restore on unlock', () => {
   });
 
   it('restores the remembered route after a password unlock', async () => {
-    setPendingRoute('/(app)/entry/abc');
+    setPendingRoute('/entry/abc', ['(app)', 'entry', '[id]']);
 
     const { findByLabelText, findByText } = await render(wrap(<Unlock />));
     const input = await findByLabelText('Senha mestre', { exact: false });
     void fireEvent.changeText(input, 'correct horse');
     void fireEvent.press(await findByText('Desbloquear'));
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(app)/entry/abc'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/entry/abc'));
   });
 
   it('restores the remembered route after a biometric unlock', async () => {
-    setPendingRoute('/(app)/entry/abc');
+    setPendingRoute('/entry/abc', ['(app)', 'entry', '[id]']);
 
     const { findByLabelText } = await render(wrap(<Unlock />));
     void fireEvent.press(await findByLabelText('Usar biometria'));
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(app)/entry/abc'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/entry/abc'));
   });
 
   it('falls back to the tabs when no route was remembered', async () => {
