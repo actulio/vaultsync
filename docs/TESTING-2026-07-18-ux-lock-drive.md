@@ -78,6 +78,21 @@ That last step is the security property. If the password is still visible after 
 
 ---
 
+## 2b. Screen-capture protection (FLAG_SECURE)
+
+Added after final review, because the reveal toggle newly puts a plaintext password on screen. **Compile-verified only — the `runOnUiThread` contract has never executed.**
+
+- [ ] Open the app, then open the **app switcher / recents**.
+      → **Expected:** the VaultSync card is **blank/grey**, not a live preview of your vault.
+- [ ] Try to take a **screenshot** inside the app.
+      → **Expected:** Android blocks it ("Can't take screenshot due to security policy" or similar).
+
+> If screenshots still work, the flag is not being applied — most likely the `runOnUiThread` call threw, which nothing in the JS suite can detect. Check `adb logcat` for an exception around app start.
+
+**Note:** this is app-wide and permanent. You will not be able to screenshot VaultSync at all. That is intended.
+
+---
+
 ## 3. Clipboard (2-minute window)
 
 - [ ] Copy a password. → **Expected:** toast reads "Copiado! Será limpo em 2 min".
