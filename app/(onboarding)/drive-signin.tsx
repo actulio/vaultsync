@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
 import { isDriveConfigured, signInWithGoogle, skipDriveForNow } from '@/drive/auth';
 import { useDialog } from '@/components/DialogProvider';
+import { showToast } from '@/components/toast';
 import { useTheme } from '@/theme';
 
 export default function DriveSignin(): JSX.Element {
@@ -20,9 +21,20 @@ export default function DriveSignin(): JSX.Element {
     }
     try {
       const ok = await signInWithGoogle();
-      if (ok) router.replace('/(app)/(tabs)');
+      if (ok) {
+        router.replace('/(app)/(tabs)');
+        return;
+      }
+      // `false` means the user cancelled the OAuth prompt, or Google returned
+      // no refresh token. Not an error — non-blocking toast, and we stay on
+      // this screen so the user can retry or skip.
+      showToast(tSync('connectCancelled'));
     } catch (e) {
-      await dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
+      // exchangeCodeAsync messages are untranslated and can embed the token
+      // endpoint URL and OAuth error payloads. Log the detail for debugging
+      // (never the auth code or token) and show the friendly PT/EN copy.
+      console.warn('[drive-signin] Google sign-in failed:', (e as Error).message);
+      await dialog.alert({ title: tCommon('errorTitle'), message: tSync('signInFailed') });
     }
   };
 

@@ -13,5 +13,7 @@
   "syncNow": "Sync now",
   "neverSynced": "Never synced",
   "notConfigured": "Google Drive is not configured in this build.",
-  "signInFailed": "Could not connect to Google Drive."
+  "signInFailed": "Could not connect to Google Drive.",
+  "connected": "Google Drive connected.",
+  "connectCancelled": "Google Drive connection was not completed."
 }

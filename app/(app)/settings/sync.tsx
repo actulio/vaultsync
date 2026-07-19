@@ -5,6 +5,7 @@ import { useSyncStore } from '@/sync/store';
 import { syncOnce } from '@/sync/orchestrator';
 import { hasDriveToken, isDriveConfigured, signInWithGoogle } from '@/drive/auth';
 import { useDialog } from '@/components/DialogProvider';
+import { showToast } from '@/components/toast';
 import { useTheme } from '@/theme';
 
 export default function SyncSettingsScreen(): JSX.Element {
@@ -32,7 +33,18 @@ export default function SyncSettingsScreen(): JSX.Element {
       return;
     }
     try {
-      await signInWithGoogle();
+      const ok = await signInWithGoogle();
+      // signInWithGoogle() never touches the sync store, and the mount effect
+      // has a [] dep so it never re-runs — neither outcome would move the UI on
+      // its own. Re-probe SecureStore rather than setting the status blind: it
+      // is the single authority on whether a refresh token now exists, and the
+      // same probe covers both the success and the false path.
+      const has = await hasDriveToken();
+      useSyncStore.getState().setStatus(has ? 'idle' : 'paused_no_token');
+      // `false` means the user cancelled the OAuth prompt, or Google returned
+      // no refresh token. A cancellation is not an error the user needs to
+      // dismiss — non-blocking toast, never the blocking dialog.
+      showToast(ok ? t('connected') : t('connectCancelled'));
     } catch (e) {
       useSyncStore.getState().setStatus('error', (e as Error).message);
       await dialog.alert({ title: tCommon('errorTitle'), message: t('signInFailed') });
