@@ -1,6 +1,67 @@
 # VaultSync — what's next
 
-## ✅ CURRENT STATE — updated 2026-07-04 (source of truth; sections below predate this and are provenance only)
+## ✅ CURRENT STATE — updated 2026-07-19 (source of truth; everything below predates this and is provenance only)
+
+**Pushed to `origin/main`, HEAD `afb260a`** (origin even with local). Gates: `pnpm test` **318/318** (57 suites),
+`pnpm run typecheck` **0**, lint **0**, `:vaultsync-native:assembleDebug` + `assembleDebugAndroidTest` SUCCESSFUL.
+
+> **Run lint as `./node_modules/.bin/eslint . --ext .ts,.tsx`.** A shell wrapper on the dev machine emits false
+> positives on unrelated `.js` config files and will make a clean tree look broken.
+
+The **2026-07-18 UX-polish / lock-restore / Drive plan** shipped (22 commits, `132eb98..afb260a`). Plan:
+`docs/superpowers/plans/2026-07-18-ux-polish-lock-drive.md`. Full execution ledger with every decision and
+plan defect: `.superpowers/sdd/progress.md`.
+
+What landed, from four user-reported issues:
+- **Branded toast + dialog replace all 14 `Alert.alert` sites.** `react-native-toast-message` behind a
+  `showToast` seam (chosen over sonner-native: zero native deps vs a gesture-handler rebuild) + a hand-built
+  `Dialog`/`DialogProvider` with an imperative `useDialog()`. Also fixed a hardcoded English `'Error'` title
+  shown to a PT-default audience.
+- **Clipboard 30s → 2min** + native `copyToClipboard` marking the clip `EXTRA_IS_SENSITIVE`.
+- **Blank screen on foreground FIXED.** `lock()` nulled the vault but nothing navigated away from `(tabs)`, so
+  `(tabs)/index.tsx` fell through to `if (!vault) return <View />`. Now redirects on the status transition and
+  restores the prior route after unlock (both password and biometric paths).
+- **Drive connect button FIXED.** No `.env` existed so `signInWithGoogle()` threw, and both call sites swallowed
+  it via a bare `void`. Now surfaces errors; also fixed a CTA that only offered "Connect" at status
+  `paused_no_token` while the store initialises to `idle` (so the first tap silently ran `syncOnce()`), and
+  the case where cancelling the Google prompt was still silent.
+- **Password reveal (eye) toggle** — previously a stored password could never be viewed, only copied. Hidden by
+  default *structurally*: lock uses `router.replace`, which unmounts the screen, so local state resets. Three
+  mutually-referencing comments document that coupling — do not "simplify" `replace` to `push`.
+- **`FLAG_SECURE`** app-wide (recents thumbnail / screenshots), in the **tracked** `modules/vaultsync-native/`
+  because `android/` is gitignored (Expo CNG) and a `MainActivity.kt` edit would be wiped by `prebuild`.
+
+### ⚠️ NOTHING BELOW HAS BEEN VERIFIED ON A DEVICE
+
+**`connectedAndroidTest` never ran once during the entire plan** — no emulator or device was reachable. These
+are compile-verified only:
+- `EXTRA_IS_SENSITIVE` — the clipboard window was tripled on the strength of it
+- `FLAG_SECURE` — if the `runOnUiThread` call throws, screenshots still work and no JS test can detect it
+
+**Do this first: `docs/TESTING-2026-07-18-ux-lock-drive.md`.** It starts with `connectedAndroidTest` and states
+per-item what is and is not proven.
+
+Two findings worth carrying forward:
+- **The clipboard clear has probably never worked on Android 10+.** Only the focused app or default IME may
+  touch the clipboard, so the WorkManager job silently no-ops; a foreground service does not count as focused.
+  Mitigated by clearing on app foreground. Android 13+ auto-clear is the backstop.
+- **Route restore was dead and 315 tests hid it.** `usePathname()` strips group segments, so a
+  `startsWith('/(app)/')` check could never match — and the test mock encoded the same wrong assumption, so the
+  mock *was* the spec. Fixed via `useSegments()` (`efc4f4b`), mutation-checked. Cautionary tale: a green suite
+  cannot catch a premise the test and the code share.
+
+Deferred, triaged by the final whole-branch review (details in the ledger): **fix soon** — no test covers the
+`import/confirm` success dialog (reports import counts + the "delete the plaintext CSV" reminder; the
+highest-consequence unverified string in the app). **Leave** — weak dialog-card test assertion, duplicated
+slider mock, copy-and-stay clipboard gap, icon token inconsistency, no success toast on `drive-signin`.
+
+Also deferred: **`docs/FUTURE-release-keystore.md`** — release APKs are debug-signed with the stock RN template
+keystore. Fine for personal sideloading, blocks any distribution. Note that switching keys invalidates the
+Google OAuth SHA-1 *and* forces an uninstall that wipes `vault.enc`.
+
+---
+
+## 🕰️ CURRENT STATE — updated 2026-07-04 (SUPERSEDED by the block above; kept for provenance)
 
 Everything is **pushed to `origin/main`, HEAD `c753269`** (origin even with local). Since the six-plan v1
 series shipped, these landed (all pushed): Plan 7 (entry-form UX), backlogs A–D, the JS crypto backend swaps
