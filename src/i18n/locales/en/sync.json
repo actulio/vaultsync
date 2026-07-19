@@ -10,5 +10,8 @@
   "lastSynced": "Last: {{time}}",
   "queueDepth": "Queue: {{n}} pending",
   "connect": "Connect Google Drive",
-  "syncNow": "Sync now"
+  "syncNow": "Sync now",
+  "neverSynced": "Never synced",
+  "notConfigured": "Google Drive is not configured in this build.",
+  "signInFailed": "Could not connect to Google Drive."
 }

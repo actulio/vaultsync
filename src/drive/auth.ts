@@ -14,6 +14,15 @@ const discovery = {
 };
 
 /**
+ * Whether an OAuth client id is present. Lets the UI distinguish "never set up"
+ * from "sign-in failed" and show an actionable message instead of a raw throw.
+ */
+export function isDriveConfigured(): boolean {
+  const id = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+  return typeof id === 'string' && id.trim() !== '';
+}
+
+/**
  * Sign in with Google and authorise Drive access via OAuth 2.0 PKCE flow.
  * Stores the refresh token and access token in expo-secure-store.
  * Returns true on success, false on cancellation or error.

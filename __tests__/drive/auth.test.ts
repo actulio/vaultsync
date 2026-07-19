@@ -44,7 +44,7 @@ jest.mock('expo-auth-session', () => ({
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 import * as SecureStore from 'expo-secure-store';
-import { hasDriveToken, skipDriveForNow, signInWithGoogle } from '@/drive/auth';
+import { hasDriveToken, isDriveConfigured, skipDriveForNow, signInWithGoogle } from '@/drive/auth';
 
 beforeEach(() => {
   // Clear the in-memory store and reset mocks between tests.
@@ -67,6 +67,33 @@ describe('hasDriveToken', () => {
     const result = await hasDriveToken();
     expect(result).toBe(true);
     expect(SecureStore.getItemAsync).toHaveBeenCalledWith('drive_refresh_token');
+  });
+});
+
+describe('isDriveConfigured', () => {
+  const originalEnv = process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+
+  afterEach(() => {
+    if (originalEnv === undefined) {
+      delete process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+    } else {
+      process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID = originalEnv;
+    }
+  });
+
+  it('is false when the client id is absent', () => {
+    delete process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+    expect(isDriveConfigured()).toBe(false);
+  });
+
+  it('is false when the client id is blank', () => {
+    process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID = '   ';
+    expect(isDriveConfigured()).toBe(false);
+  });
+
+  it('is true when the client id is set', () => {
+    process.env.EXPO_PUBLIC_GOOGLE_OAUTH_CLIENT_ID = 'x.apps.googleusercontent.com';
+    expect(isDriveConfigured()).toBe(true);
   });
 });
 

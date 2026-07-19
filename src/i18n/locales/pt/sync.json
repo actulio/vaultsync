@@ -10,5 +10,8 @@
   "lastSynced": "Última: {{time}}",
   "queueDepth": "Fila: {{n}} pendentes",
   "connect": "Conectar Google Drive",
-  "syncNow": "Sincronizar agora"
+  "syncNow": "Sincronizar agora",
+  "neverSynced": "Nunca sincronizado",
+  "notConfigured": "Google Drive não configurado neste app.",
+  "signInFailed": "Falha ao conectar ao Google Drive."
 }

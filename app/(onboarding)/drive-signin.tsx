@@ -2,16 +2,28 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { JSX } from 'react';
-import { signInWithGoogle, skipDriveForNow } from '@/drive/auth';
+import { isDriveConfigured, signInWithGoogle, skipDriveForNow } from '@/drive/auth';
+import { useDialog } from '@/components/DialogProvider';
 import { useTheme } from '@/theme';
 
 export default function DriveSignin(): JSX.Element {
   const { t } = useTranslation('onboarding');
+  const { t: tSync } = useTranslation('sync');
+  const { t: tCommon } = useTranslation('common');
   const { colors, spacing, radii, type } = useTheme();
+  const dialog = useDialog();
 
   const connect = async (): Promise<void> => {
-    const ok = await signInWithGoogle();
-    if (ok) router.replace('/(app)/(tabs)');
+    if (!isDriveConfigured()) {
+      await dialog.alert({ title: tCommon('errorTitle'), message: tSync('notConfigured') });
+      return;
+    }
+    try {
+      const ok = await signInWithGoogle();
+      if (ok) router.replace('/(app)/(tabs)');
+    } catch (e) {
+      await dialog.alert({ title: tCommon('errorTitle'), message: (e as Error).message });
+    }
   };
 
   const skip = (): void => {
